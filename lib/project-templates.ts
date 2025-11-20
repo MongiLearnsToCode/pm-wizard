@@ -1,0 +1,61 @@
+export const PROJECT_TEMPLATES = [
+  {
+    id: 'marketing',
+    name: 'Marketing Campaign',
+    description: 'Launch a marketing campaign with content and promotion',
+    suggestedRoles: { admin: 1, member: 3, viewer: 2 },
+    tasks: [
+      'Define campaign goals',
+      'Create content calendar',
+      'Design marketing materials',
+      'Launch campaign',
+      'Monitor and analyze results',
+    ],
+  },
+  {
+    id: 'software',
+    name: 'Software Launch',
+    description: 'Develop and launch a software product',
+    suggestedRoles: { admin: 1, member: 5, viewer: 1 },
+    tasks: [
+      'Requirements gathering',
+      'Design architecture',
+      'Develop features',
+      'Testing and QA',
+      'Deploy to production',
+    ],
+  },
+  {
+    id: 'event',
+    name: 'Event Planning',
+    description: 'Plan and execute an event',
+    suggestedRoles: { admin: 1, member: 4, viewer: 2 },
+    tasks: [
+      'Define event scope',
+      'Book venue',
+      'Coordinate vendors',
+      'Promote event',
+      'Execute event day',
+    ],
+  },
+  {
+    id: 'content',
+    name: 'Content Creation',
+    description: 'Create and publish content',
+    suggestedRoles: { admin: 1, member: 3, viewer: 1 },
+    tasks: [
+      'Content strategy',
+      'Create content',
+      'Review and edit',
+      'Publish content',
+      'Measure engagement',
+    ],
+  },
+  {
+    id: 'general',
+    name: 'General Project',
+    description: 'Start from scratch',
+    suggestedRoles: { admin: 1, member: 2, viewer: 1 },
+    tasks: [],
+  },
+];
