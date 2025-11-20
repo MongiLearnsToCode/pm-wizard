@@ -20,7 +20,7 @@ export function ExportRequest() {
     if (!user) return;
 
     // Create notification for admin
-    await supabase.from('notifications').insert({
+    await (supabase as any).from('notifications').insert({
       user_id: user.id,
       type: 'export_request',
       title: 'Data Export Requested',
