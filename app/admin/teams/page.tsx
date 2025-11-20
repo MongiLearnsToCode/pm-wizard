@@ -49,7 +49,7 @@ export default function TeamsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...newTeam,
-        organization_id: orgs.id,
+        organization_id: (orgs as any).id,
       }),
     });
 
