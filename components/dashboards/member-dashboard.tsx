@@ -43,11 +43,12 @@ export function MemberDashboard() {
       if (data) {
         setTasks(data);
         const now = new Date();
+        const tasksData = data as any[];
         setStats({
-          total: data.length,
-          completed: data.filter((t) => t.status === 'completed').length,
-          inProgress: data.filter((t) => t.status === 'in_progress').length,
-          overdue: data.filter(
+          total: tasksData.length,
+          completed: tasksData.filter((t) => t.status === 'completed').length,
+          inProgress: tasksData.filter((t) => t.status === 'in_progress').length,
+          overdue: tasksData.filter(
             (t) =>
               t.due_date &&
               new Date(t.due_date) < now &&
