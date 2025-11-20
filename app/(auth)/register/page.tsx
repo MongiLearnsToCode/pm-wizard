@@ -35,12 +35,6 @@ export default function RegisterPage() {
       setError(signUpError.message);
       setLoading(false);
     } else if (data.user) {
-      // Create profile
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        full_name: fullName,
-      });
-
       router.push('/login');
     }
   };
