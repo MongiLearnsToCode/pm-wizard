@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   const { data: tasks } = await supabase
     .from('tasks')
-    .select('*, profiles(*)')
+    .select('*')
     .lt('due_date', tomorrow.toISOString())
     .eq('status', 'todo')
     .is('deleted_at', null);

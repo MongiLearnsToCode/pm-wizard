@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from('comments')
-    .select('*, profiles(*)')
+    .select('*')
     .eq('task_id', taskId)
     .order('created_at', { ascending: false });
 

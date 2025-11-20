@@ -38,7 +38,7 @@ export default function SettingsPage() {
 
         const { data: memberData } = await supabase
           .from('user_organization_roles')
-          .select('*, profiles(*)')
+          .select('*')
           .eq('organization_id', orgs.id);
 
         setMembers(memberData || []);
