@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
 
-  const { data: org, error } = await supabase
+  const { data: org, error } = await (supabase as any)
     .from('organizations')
     .insert({
       name: body.name,
@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Auto-assign creator as admin
-  await supabase.from('user_organization_roles').insert({
+  await (supabase as any).from('user_organization_roles').insert({
     user_id: user.id,
-    organization_id: org.id,
+    organization_id: (org as any).id,
     role: 'admin',
   });
 

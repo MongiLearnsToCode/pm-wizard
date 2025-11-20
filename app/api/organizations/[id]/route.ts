@@ -50,7 +50,7 @@ export async function PATCH(
 
   const body = await request.json();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('organizations')
     .update(body)
     .eq('id', id)
@@ -83,7 +83,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('organizations')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id);

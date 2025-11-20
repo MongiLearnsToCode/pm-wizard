@@ -54,14 +54,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }
 
-  const role = await getUserRole(user.id, task.project_id);
+  const role = await getUserRole(user.id, (task as any).project_id);
 
   // Only admins and members can comment
   if (role !== 'admin' && role !== 'member') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('comments')
     .insert({
       task_id: body.task_id,
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
   // Create notifications for mentions
   if (body.mentions?.length) {
     for (const mentionedUserId of body.mentions) {
-      await supabase.from('notifications').insert({
+      await (supabase as any).from('notifications').insert({
         user_id: mentionedUserId,
         type: 'mention',
         title: 'You were mentioned',

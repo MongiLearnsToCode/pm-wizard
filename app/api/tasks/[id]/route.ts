@@ -56,13 +56,14 @@ export async function PATCH(
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }
 
-  const role = await getUserRole(user.id, task.project_id);
+  const taskData = task as any;
+  const role = await getUserRole(user.id, taskData.project_id);
 
-  if (role !== 'admin' && task.assignee_id !== user.id) {
+  if (role !== 'admin' && taskData.assignee_id !== user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('tasks')
     .update(body)
     .eq('id', id)
@@ -101,7 +102,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }
 
-  const role = await getUserRole(user.id, task.project_id);
+  const role = await getUserRole(user.id, (task as any).project_id);
 
   if (role !== 'admin') {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });

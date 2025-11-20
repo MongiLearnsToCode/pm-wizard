@@ -38,7 +38,7 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json();
 
   if (body.mark_all_read) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('notifications')
       .update({ read: true })
       .eq('user_id', user.id)
@@ -52,7 +52,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   if (body.notification_id) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('notifications')
       .update({ read: true })
       .eq('id', body.notification_id)

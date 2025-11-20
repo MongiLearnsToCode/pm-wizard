@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }
 
-  const role = await getUserRole(user.id, task.project_id);
+  const role = await getUserRole(user.id, (task as any).project_id);
 
   // Only admins and members can upload
   if (role !== 'admin' && role !== 'member') {
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
   await uploadFile(key, buffer, file.type);
 
   // Save file record
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('files')
     .insert({
       task_id: taskId,

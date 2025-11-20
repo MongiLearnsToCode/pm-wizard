@@ -44,7 +44,7 @@ export async function PATCH(
 
   const body = await request.json();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('teams')
     .update(body)
     .eq('id', id)
@@ -72,7 +72,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('teams')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id);

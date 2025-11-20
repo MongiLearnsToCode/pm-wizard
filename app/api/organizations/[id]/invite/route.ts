@@ -26,7 +26,7 @@ export async function POST(
 
   // Create notification for invited user (simplified)
   // In production, send actual email via Resend
-  await supabase.from('notifications').insert({
+  await (supabase as any).from('notifications').insert({
     user_id: user.id,
     type: 'invitation',
     title: 'Organization Invitation',
