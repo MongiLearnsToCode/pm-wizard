@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
 
   // Delete existing drafts
-  await supabase.from('wizard_drafts').delete().eq('user_id', user.id);
+  await (supabase as any).from('wizard_drafts').delete().eq('user_id', user.id);
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('wizard_drafts')
     .insert({
       user_id: user.id,
