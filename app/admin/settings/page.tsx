@@ -33,13 +33,14 @@ export default function SettingsPage() {
         .limit(1)
         .single();
 
-      if (orgs && orgs.id) {
+      if (orgs) {
         setOrg(orgs);
 
+        const orgId = (orgs as any).id;
         const { data: memberData } = await supabase
           .from('user_organization_roles')
           .select('*')
-          .eq('organization_id', orgs.id);
+          .eq('organization_id', orgId);
 
         setMembers(memberData || []);
       }
