@@ -20,7 +20,7 @@ export async function PATCH(
   // Users can only update their own comments
   const { data, error } = await supabase
     .from('comments')
-    .update({ content: body.content })
+    .update({ content: body.content } as any)
     .eq('id', id)
     .eq('user_id', user.id)
     .select()
