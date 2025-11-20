@@ -63,10 +63,10 @@ export function MemberDashboard() {
 
   const handleToggleTask = async (taskId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'completed' ? 'todo' : 'completed';
-    await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+    await (supabase as any).from('tasks').update({ status: newStatus }).eq('id', taskId);
 
     setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+      prev.map((t) => ((t as any).id === taskId ? { ...t, status: newStatus } : t))
     );
   };
 
