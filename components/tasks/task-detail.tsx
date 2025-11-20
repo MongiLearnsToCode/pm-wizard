@@ -41,6 +41,7 @@ export function TaskDetail({
   }, [taskId, isOpen]);
 
   async function fetchTask() {
+    if (!taskId) return;
     const { data } = await supabase
       .from('tasks')
       .select('*')
@@ -50,6 +51,7 @@ export function TaskDetail({
   }
 
   async function fetchComments() {
+    if (!taskId) return;
     const { data } = await supabase
       .from('comments')
       .select('*, profiles(*)')
