@@ -33,7 +33,7 @@ export default function SettingsPage() {
         .limit(1)
         .single();
 
-      if (orgs) {
+      if (orgs && orgs.id) {
         setOrg(orgs);
 
         const { data: memberData } = await supabase
