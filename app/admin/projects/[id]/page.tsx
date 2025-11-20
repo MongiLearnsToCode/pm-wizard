@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { TaskWizard } from '@/components/wizard/task-wizard';
 import { TaskList } from '@/components/dashboard/task-list';
+import { use } from 'react';
 
 export default function ProjectDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const [project, setProject] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -27,7 +29,7 @@ export default function ProjectDetailPage({
     const { data } = await supabase
       .from('projects')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
     setProject(data);
   }
@@ -36,7 +38,7 @@ export default function ProjectDetailPage({
     const { data } = await supabase
       .from('tasks')
       .select('*')
-      .eq('project_id', params.id)
+      .eq('project_id', id)
       .is('deleted_at', null);
     setTasks(data || []);
   }
@@ -85,7 +87,7 @@ export default function ProjectDetailPage({
       </Card>
 
       <TaskWizard
-        projectId={params.id}
+        projectId={id}
         open={wizardOpen}
         onClose={() => setWizardOpen(false)}
         onSuccess={fetchTasks}

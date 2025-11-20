@@ -4,7 +4,8 @@ import { isOrgAdmin } from '@/lib/rbac';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
+  const { id } = await params;
 ) {
   const supabase = await createClient();
   const {
@@ -15,7 +16,7 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const isAdmin = await isOrgAdmin(user.id, params.id);
+  const isAdmin = await isOrgAdmin(user.id, id);
   if (!isAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
