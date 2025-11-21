@@ -106,26 +106,67 @@ You are a meticulous, systematic developer who builds production-ready code incr
 
 ## Role-Based Development Rules
 
-### Critical Role Permissions
-- **Admin**: Full access to all features, wizard, team management, settings
-- **Member**: Task-focused, can edit own tasks, comment, upload files
-- **Viewer**: Read-only, analytics-focused, no edit/create/delete actions
+### Critical Role Permissions (Per-Project Context)
+
+**IMPORTANT**: Roles are assigned per-project, not per-user. The same user can have different roles across different projects.
+
+- **Admin**: For projects the user created or manages
+  - Full access to project features, wizard, team management, settings
+  - Can create, edit, delete projects and tasks
+  - Can assign roles to other users for their projects
+  - Can invite new team members
+  
+- **Member**: For projects where the user is a team member
+  - Task-focused view showing only assigned tasks
+  - Can edit own tasks, update status, comment, upload files
+  - Cannot create/delete tasks or manage team
+  - Limited project context (read-only project details)
+  
+- **Viewer**: For projects where the user is an observer
+  - Read-only access to project and tasks
+  - Analytics-focused dashboard
+  - Can view reports and project status
+  - No edit/create/delete actions allowed
+
+### Role Switching and Context
+
+**REQ**: The system must support seamless role switching when users navigate between projects:
+
+1. **Project Context Determines Role**: When a user selects a project, their role for that specific project determines the dashboard and features they see
+
+2. **Dynamic Dashboard Rendering**: The UI must dynamically adjust based on:
+   - Current project selected
+   - User's role in that project
+   - Available actions for that role
+
+3. **Role Switcher Component**: Must be present in navigation showing:
+   - Current project name
+   - Current role badge
+   - List of all accessible projects with their respective roles
+   - One-click switching between projects/roles
+
+4. **Persistent Context**: The system must remember:
+   - Last selected project/role combination
+   - Store in localStorage or Zustand persist
+   - Restore on next login
 
 ### Every Feature Must Consider:
-1. Which roles can access this feature?
-2. What UI elements should be visible/hidden per role?
-3. What API validations are needed per role?
-4. What RLS policies enforce this at database level?
-5. **What PostHog events should be tracked for this feature, and with what role context?**
+1. Which roles can access this feature **in the current project context**?
+2. What UI elements should be visible/hidden per role **for this project**?
+3. What API validations are needed per role **and project**?
+4. What RLS policies enforce this at database level **filtering by project_id and user_role**?
+5. **What PostHog events should be tracked for this feature, with role AND project context?**
 
 ### UI Component Checklist
 For every component with user interaction:
-- [ ] Props include `userRole?: 'admin' | 'member' | 'viewer'`
-- [ ] Buttons disabled/hidden based on role
-- [ ] Forms validate role permissions
-- [ ] Navigation items filtered by role
+- [ ] Props include `userRole?: 'admin' | 'member' | 'viewer'` and `projectId?: string`
+- [ ] Buttons disabled/hidden based on role **in current project**
+- [ ] Forms validate role permissions **for current project**
+- [ ] Navigation items filtered by role **and show current project**
 - [ ] Error messages appropriate to role
-- [ ] **PostHog events fire when component actions are taken**
+- [ ] **PostHog events fire with both role and project_id context**
+- [ ] Role badge visible showing current role
+- [ ] Project switcher accessible from navigation
 
 ## Decision-Making Protocol
 

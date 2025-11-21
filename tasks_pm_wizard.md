@@ -22,23 +22,42 @@ This is a **greenfield project** - no existing codebase. We will be building fro
 
 ## Key Architectural Changes for Role-Based Dashboards
 
+### Role Assignment Model (Per-Project)
+**CRITICAL**: Roles are assigned per-project, not globally per-user. A single user can have different roles across different projects:
+- **Admin** on Project A (projects they created)
+- **Member** on Project B (projects where they're a team member)
+- **Viewer** on Project C (projects they're invited to observe)
+
 ### New Data Model Components
 - **user_project_roles** junction table: Links users to projects with specific roles (Admin, Member, Viewer)
+  - Columns: user_id, project_id, role, assigned_at, assigned_by
+  - Primary key: (user_id, project_id)
+  - Role is determined by this table for each project
 - **user_organization_roles** junction table: Links users to organizations with roles
-- Role-based RLS policies on all tables
+- Role-based RLS policies on all tables filtering by project_id AND user role
 
 ### New UI Components
-- Role-aware dashboard layouts (3 distinct dashboards)
-- Role indicator badge in navigation
-- Dashboard switcher for users with multiple roles
-- Role-specific navigation menus
-- Permission-aware buttons and forms
+- Role-aware dashboard layouts (3 distinct dashboards that switch based on selected project)
+- **Project/Role switcher** in navigation showing current project and role
+- Role indicator badge showing current role for selected project
+- Dashboard switcher for users with multiple roles across projects
+- Role-specific navigation menus that update when project changes
+- Permission-aware buttons and forms that check role in current project context
 
 ### New Backend Logic
-- Role validation middleware for API routes
-- Role-based query filtering
-- Permission checking utilities
+- Role validation middleware for API routes (checks role for specific project)
+- Role-based query filtering (filters by project_id and user_role)
+- Permission checking utilities (getUserRoleForProject, checkPermissionForProject)
 - Role-aware notification routing
+- Project context management in Zustand store
+
+### Role Switching Flow
+1. User logs in → System detects all projects and roles
+2. Default to last selected project/role (from localStorage)
+3. User can switch projects via project switcher
+4. Dashboard dynamically re-renders based on role in selected project
+5. Navigation, features, and permissions update accordingly
+6. PostHog tracks role and project context in all events
 
 ## Relevant Files
 
@@ -78,17 +97,18 @@ This is a **greenfield project** - no existing codebase. We will be building fro
 - `app/api/cron/grace-period/route.ts` - Grace period enforcement job
 
 ### Components (using shadcn/ui conventions) - Updated
-- **`components/role/role-badge.tsx`** - Role indicator badge component
-- **`components/role/role-guard.tsx`** - Component wrapper for role-based rendering
-- **`components/role/dashboard-switcher.tsx`** - Dashboard view switcher (for multi-role users)
-- **`components/dashboards/admin-dashboard.tsx`** - Admin-specific dashboard layout
-- **`components/dashboards/member-dashboard.tsx`** - Member-specific dashboard layout
-- **`components/dashboards/viewer-dashboard.tsx`** - Viewer-specific dashboard layout
-- **`components/navigation/admin-nav.tsx`** - Admin navigation menu
-- **`components/navigation/member-nav.tsx`** - Member navigation menu
-- **`components/navigation/viewer-nav.tsx`** - Viewer navigation menu
-- `components/ui/button.tsx` - shadcn Button component **with role-aware disabled states**
-- `components/ui/card.tsx` - shadcn Card component **with role-based action visibility**
+- **`components/role/role-badge.tsx`** - Role indicator badge component (shows current role for selected project)
+- **`components/role/role-guard.tsx`** - Component wrapper for role-based rendering (checks role in project context)
+- **`components/role/project-switcher.tsx`** - Project/role switcher (lists all projects with user's role for each)
+- **`components/role/dashboard-switcher.tsx`** - Dashboard view switcher (deprecated - use project-switcher)
+- **`components/dashboards/admin-dashboard.tsx`** - Admin-specific dashboard layout (for projects where user is Admin)
+- **`components/dashboards/member-dashboard.tsx`** - Member-specific dashboard layout (for projects where user is Member)
+- **`components/dashboards/viewer-dashboard.tsx`** - Viewer-specific dashboard layout (for projects where user is Viewer)
+- **`components/navigation/admin-nav.tsx`** - Admin navigation menu (shows when viewing project as Admin)
+- **`components/navigation/member-nav.tsx`** - Member navigation menu (shows when viewing project as Member)
+- **`components/navigation/viewer-nav.tsx`** - Viewer navigation menu (shows when viewing project as Viewer)
+- `components/ui/button.tsx` - shadcn Button component **with role-aware disabled states per project**
+- `components/ui/card.tsx` - shadcn Card component **with role-based action visibility per project**
 - `components/ui/dialog.tsx` - shadcn Dialog component
 - `components/ui/dropdown-menu.tsx` - shadcn Dropdown Menu
 - `components/ui/input.tsx` - shadcn Input component **with read-only mode for Viewers**
@@ -97,7 +117,7 @@ This is a **greenfield project** - no existing codebase. We will be building fro
 - `components/ui/progress.tsx` - shadcn Progress component
 - `components/ui/checkbox.tsx` - shadcn Checkbox component
 - `components/ui/toast.tsx` - shadcn Toast/Sonner for notifications
-- `components/wizard/project-wizard.tsx` - Multi-step project creation wizard **(Admin-only)**
+- `components/wizard/project-wizard.tsx` - Multi-step project creation wizard **(Admin-only, creates new project where user becomes Admin)**
 - **`components/wizard/role-assignment-step.tsx`** - Role assignment wizard step
 - `components/wizard/task-wizard.tsx` - Task assignment wizard **(Admin-only)**
 - `components/wizard/wizard-step.tsx` - Reusable wizard step component

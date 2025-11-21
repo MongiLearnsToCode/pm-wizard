@@ -56,7 +56,7 @@ This document outlines the requirements for a conversational, wizard-driven proj
 
 **REQ-4.1.2:** The system must support social login via Google and Microsoft accounts.
 
-**REQ-4.1.3:** All users register through the same signup flow - role assignment happens after account creation when they are added to projects or organizations.
+**REQ-4.1.3:** All users register through the same unified signup flow - no role selection during registration.
 
 **REQ-4.1.4:** The system must allow users to reset passwords via email verification link.
 
@@ -64,40 +64,114 @@ This document outlines the requirements for a conversational, wizard-driven proj
 
 **REQ-4.1.6:** The system must allow users to update their profile (name, avatar, email, notification preferences).
 
-**REQ-4.1.7:** Upon login, the system must detect the user's primary role and route them to the appropriate dashboard (Admin, Member, or Viewer).
+**REQ-4.1.7:** Upon login, the system must detect the user's roles across all projects and route them to the appropriate default dashboard.
 
-**REQ-4.1.8:** If a user has multiple roles across different projects, the system must default to the highest permission level for the default view.
+**REQ-4.1.8:** A user's role is determined per-project:
+- **Admin**: For projects they created or where they have been assigned admin role
+- **Member**: For projects where they have been added as a team member
+- **Viewer**: For projects where they have been invited as an observer
+
+**REQ-4.1.9:** The same user can be an Admin on Project A, a Member on Project B, and a Viewer on Project C simultaneously.
+
+**REQ-4.1.10:** The system must provide a role/project switcher in the navigation to allow users to seamlessly transition between their different roles and projects.
 
 ### 4.2 Role-Based Dashboard System
 
-**REQ-4.2.1:** The system must provide three distinct dashboard experiences based on user role:
-- **Admin Dashboard**: Full project management, team management, settings, and analytics
-- **Member Dashboard**: Task-focused view with assigned work, collaboration features, and limited project context
-- **Viewer Dashboard**: Read-only overview with analytics, reports, and project status monitoring
+**REQ-4.2.1:** The system must provide three distinct dashboard experiences based on user role per project:
+- **Admin Dashboard**: Full project management, team management, settings, and analytics (for projects the user created or manages)
+- **Member Dashboard**: Task-focused view with assigned work, collaboration features, and limited project context (for projects where user is a team member)
+- **Viewer Dashboard**: Read-only overview with analytics, reports, and project status monitoring (for projects where user is an observer)
 
-**REQ-4.2.2:** The system must dynamically render navigation, features, and UI elements based on the user's role in the current context.
+**REQ-4.2.2:** The system must dynamically render navigation, features, and UI elements based on the user's role in the currently selected project.
 
-**REQ-4.2.3:** When a user switches between projects where they have different roles, the system must adjust the dashboard accordingly.
+**REQ-4.2.3:** When a user switches between projects where they have different roles, the system must:
+- Automatically adjust the dashboard layout and available features
+- Update the navigation menu to show role-appropriate options
+- Display the current role badge in the UI
+- Maintain context of the selected project
 
-**REQ-4.2.4:** The system must clearly indicate the current role to the user with a visible badge or indicator in the navigation bar.
+**REQ-4.2.4:** The system must provide a project/role switcher component that:
+- Lists all projects the user has access to
+- Shows the user's role for each project (Admin/Member/Viewer)
+- Allows one-click switching between projects
+- Persists the last selected project/role in local storage
 
-**REQ-4.2.5:** The system must prevent role escalation - users cannot access Admin features from Member or Viewer dashboards.
+**REQ-4.2.5:** The system must clearly indicate the current role and project to the user with:
+- A visible role badge in the navigation bar
+- Project name in the page header
+- Color-coded indicators (Admin: blue, Member: green, Viewer: gray)
+
+**REQ-4.2.6:** The system must prevent role escalation - users cannot access Admin features when viewing a project where they are a Member or Viewer.
+
+**REQ-4.2.7:** The default dashboard on login must be determined by:
+- Last accessed project/role (if available in local storage)
+- Otherwise, the project where the user has the highest permission level
+- Otherwise, the most recently created/updated project
 
 ### 4.3 Admin Dashboard Features
 
-**REQ-4.3.1:** Admin dashboard must include:
+**REQ-4.3.1:** Admin dashboard must include (only for projects where user is Admin):
 - Project creation wizard access
-- All projects overview with management controls
-- Team management panel
-- Organization settings
+- All projects overview with management controls (filtered to projects where user is Admin)
+- Team management panel for current project
+- Project settings and configuration
 - Full task management (create, edit, assign, delete)
-- Analytics and reports
+- Analytics and reports for managed projects
 - User invitation and role assignment
-- Billing and quota management
+- Project-level settings
 
-**REQ-4.3.2:** Admin dashboard must show visual hierarchy of: Organization → Teams → Projects → Tasks
+**REQ-4.3.2:** Admin dashboard must show visual hierarchy of: Organization → Projects (Admin role) → Tasks
 
-**REQ-4.3.3:** Admins must see workload distribution across team members with visual indicators
+**REQ-4.3.3:** Admins must see workload distribution across team members for their managed projects with visual indicators
+
+**REQ-4.3.4:** When a user creates a new project, they automatically become the Admin for that project
+
+**REQ-4.3.5:** Admins can assign other users as Admin, Member, or Viewer for their projects
+
+**REQ-4.3.6:** The Admin dashboard must clearly indicate which projects the user manages vs. projects where they have other roles
+
+### 4.4 Role Switching and Project Context Management
+
+**REQ-4.4.1:** The system must provide a project switcher component accessible from all dashboards that:
+- Lists all projects the user has access to
+- Shows the user's role for each project with a color-coded badge
+- Displays project name and last activity timestamp
+- Allows one-click switching to any project
+- Highlights the currently selected project
+
+**REQ-4.4.2:** When a user switches projects, the system must:
+- Fetch the user's role for the selected project from user_project_roles table
+- Route to the appropriate dashboard (admin/member/viewer)
+- Update the navigation menu to show role-appropriate options
+- Update the page title and breadcrumbs
+- Store the selection in localStorage for persistence
+- Track the switch event in PostHog with old and new project/role context
+
+**REQ-4.4.3:** The system must maintain project context in Zustand store with:
+- currentProjectId: string
+- currentProjectRole: 'admin' | 'member' | 'viewer'
+- currentProjectName: string
+- availableProjects: Array<{id, name, role, lastActivity}>
+- switchProject(projectId): function to change context
+
+**REQ-4.4.4:** All API calls must include project context:
+- Project ID in request headers or query params
+- Backend validates user has access to the project
+- Backend checks user's role for the project
+- Returns 403 Forbidden if user lacks permission
+
+**REQ-4.4.5:** The system must handle edge cases:
+- User removed from project while viewing it → redirect to default project
+- User's role changed while viewing project → refresh and update dashboard
+- Project deleted while viewing it → redirect to project list
+- No projects available → show empty state with "Create Project" CTA (if user can create)
+
+**REQ-4.4.6:** On initial login, the system must:
+- Query all projects where user has any role
+- Load last selected project from localStorage
+- If last project still accessible, load that context
+- Otherwise, default to most recently active project
+- If no projects, show onboarding flow
 
 **REQ-4.3.4:** Admins must have quick actions for: Create Project, Invite User, Create Team, Assign Tasks
 
