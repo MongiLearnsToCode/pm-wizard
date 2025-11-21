@@ -14,5 +14,5 @@ export async function logRoleChange(
     type: 'audit_log',
     title: 'Role Changed',
     content: `Changed ${targetUserId} from ${oldRole} to ${newRole} in ${context}`,
-  });
+  } as any);
 }

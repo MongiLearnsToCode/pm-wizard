@@ -72,7 +72,7 @@ export function TaskDetail({
       task_id: taskId,
       user_id: user.id,
       content: comment,
-    });
+    } as any);
 
     setComment('');
     fetchComments();

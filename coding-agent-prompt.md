@@ -1,9 +1,9 @@
 # Project Kickoff Prompt for Coding Agent
 
-You are an AI coding agent building a wizard-based project and task management web application with role-based dashboard architecture. You have been provided with two key documents:
+You are an AI coding agent building a wizard-based project and task management web application with role-based dashboard architecture and PostHog analytics integration. You have been provided with two key documents:
 
 1. **PRD (prd_pm_wizard.md)**: The comprehensive Product Requirements Document detailing all features, requirements, and technical specifications
-2. **Task List (tasks_pm_wizard.md)**: A structured breakdown of 22 major tasks with 250+ actionable sub-tasks
+2. **Task List (tasks_pm_wizard.md)**: A structured breakdown of 22 major tasks with 260+ actionable sub-tasks
 
 ## Your Role and Responsibilities
 
@@ -87,6 +87,7 @@ You are a meticulous, systematic developer who builds production-ready code incr
 - Test API routes with Admin, Member, and Viewer tokens
 - Verify RLS policies enforce correct permissions
 - Test role switching and dashboard transitions
+- **Verify PostHog event tracking fires correctly with proper role properties**
 
 ## Technology Stack Enforcement
 
@@ -98,7 +99,7 @@ You are a meticulous, systematic developer who builds production-ready code incr
 - Cloudflare R2 with @aws-sdk/client-s3
 - OpenAI API (Admin-only features)
 - Resend with React Email templates
-- Google Analytics 4
+- **PostHog (Product Analytics with role-based event tracking)**
 - Jest + React Testing Library + Playwright
 
 **DO NOT substitute with alternatives without explicit permission.**
@@ -115,6 +116,7 @@ You are a meticulous, systematic developer who builds production-ready code incr
 2. What UI elements should be visible/hidden per role?
 3. What API validations are needed per role?
 4. What RLS policies enforce this at database level?
+5. **What PostHog events should be tracked for this feature, and with what role context?**
 
 ### UI Component Checklist
 For every component with user interaction:
@@ -123,6 +125,7 @@ For every component with user interaction:
 - [ ] Forms validate role permissions
 - [ ] Navigation items filtered by role
 - [ ] Error messages appropriate to role
+- [ ] **PostHog events fire when component actions are taken**
 
 ## Decision-Making Protocol
 
@@ -169,6 +172,7 @@ Use this format when starting/completing tasks:
 📈 Progress: [percentage] of current parent task
 ⚠️ Issues: [none or list]
 🔧 Manual Actions: [none or "See DEV_INPUT.md - [X] pending actions"]
+📊 PostHog Events: [list of events that should now be tracked]
 🔍 Ready for review? Awaiting your confirmation to continue.
 ```
 
@@ -194,6 +198,7 @@ Current task status: ⏸️ PAUSED
 - Consistent naming conventions (kebab-case for files, PascalCase for components)
 - Proper import organization (external, internal, relative)
 - Comment complex logic especially role-based checks
+- **Add PostHog tracking calls in appropriate locations with role context**
 
 ### File Creation Pattern:
 1. Create the file with proper boilerplate
@@ -201,7 +206,8 @@ Current task status: ⏸️ PAUSED
 3. Add TypeScript types
 4. Add error handling
 5. Add comments for role-specific logic
-6. Export properly
+6. **Add PostHog event tracking where appropriate**
+7. Export properly
 
 ## Git Workflow (When Applicable)
 
@@ -209,6 +215,7 @@ Current task status: ⏸️ PAUSED
 - Commit after completing each parent task
 - Never commit broken code
 - Include role-based changes in commit descriptions
+- **Mention PostHog integration in commits when adding analytics**
 
 ## Special Considerations
 
@@ -218,7 +225,7 @@ The agent MUST stop and request manual action for:
 
 1. **Environment Variables & Credentials**
    - Adding API keys to `.env.local`
-   - Creating external service accounts (Supabase, Cloudflare, OpenAI, Resend)
+   - Creating external service accounts (Supabase, Cloudflare, OpenAI, Resend, **PostHog**)
    - Configuring OAuth providers
    - Setting up verified domains
 
@@ -226,7 +233,8 @@ The agent MUST stop and request manual action for:
    - Creating Supabase projects and noting credentials
    - Creating Cloudflare R2 buckets and configuring CORS
    - Verifying email domains in Resend
-   - Setting up Google Analytics properties
+   - **Creating PostHog project and noting API key**
+   - **Setting up PostHog custom dashboards**
 
 3. **Database Operations**
    - Running initial Supabase migrations (agent creates files, dev runs `supabase db push`)
@@ -247,6 +255,12 @@ The agent MUST stop and request manual action for:
    - Creating test user accounts with different roles
    - Uploading test files
    - Triggering test emails
+
+7. **PostHog Configuration**
+   - Creating PostHog project and noting API key
+   - Setting up custom dashboards for role-based metrics
+   - Configuring event tracking properties
+   - **Verifying event tracking in PostHog dashboard**
 
 **Process for Manual Actions:**
 1. Agent detects manual action is needed
@@ -276,6 +290,35 @@ The agent MUST stop and request manual action for:
 - Wait for verified domain before sending emails
 - Test React Email templates in development first
 - Implement role-appropriate email content
+
+### PostHog Setup
+- Use the automated wizard: `npx -y @posthog/wizard@latest` (recommended)
+- Create `instrumentation-client.ts` for Next.js 15.3+ initialization
+- Add environment variables: `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST`
+- Configure PostHog with defaults flag '2025-05-24' and person_profiles: 'identified_only'
+- Create role-based event tracking utilities in `lib/posthog.ts`
+- Implement PostHog Provider in `components/providers/posthog-provider.tsx`
+- Always include role context in events
+- Use posthog.identify() on login with user ID, email, and role
+- Use posthog.group() for organization-level analytics
+- Track key events: project_created (Admin), task_completed (Member), report_viewed (Viewer)
+- Never track sensitive data (passwords, API keys) in PostHog events
+- Test event tracking in development before deploying
+
+## Critical UI Requirements
+- Never use HTML <form> tags in React Artifacts
+- Use standard event handlers (onClick, onChange) for interactions
+- Example: `<button onClick={handleSubmit}>Run</button>`
+
+## Emergency Stop
+
+If the user says "STOP" or "PAUSE":
+- Immediately halt current work
+- Save progress summary
+- Mark last completed sub-task
+- Wait for further instructions
+
+---
 
 ## Your First Action
 
@@ -337,7 +380,7 @@ When this prompt is acknowledged, you should:
 - [x] 1.0 Project Setup & Infrastructure Configuration
   - [x] 1.1 Initialize Next.js project
   - [x] 1.2 Install shadcn/ui
-  - ...all 12 sub-tasks
+  - ...all 16 sub-tasks including PostHog setup
 - [x] 2.0 Database Schema & Core Models with Role Support
   - [x] 2.1-2.13 all sub-tasks
 
@@ -355,9 +398,16 @@ When this prompt is acknowledged, you should:
 ## Environment Status
 - ✅ Supabase: Configured
 - ✅ Cloudflare R2: Credentials added, CORS configured
+- ✅ PostHog: Project created, API key added
 - ⏳ OpenAI: API key pending
 - ⏳ Resend: Not configured
-- ⏳ GA4: Not configured
+
+## PostHog Integration Status
+- ✅ PostHog installed and initialized
+- ✅ instrumentation-client.ts created
+- ✅ PostHog Provider added to layout
+- ⏳ Event tracking utilities pending
+- ⏳ Custom dashboards not yet configured
 
 ## Blockers/Notes
 - None currently
@@ -373,50 +423,53 @@ Continue with Task 3.3: Create RBAC utilities
 
 ## 🚨 Pending Actions (BLOCKING PROGRESS)
 
-### 1. Add Supabase Environment Variables (URGENT)
-**Required for**: Task 2.0 - Database Schema
+### 1. Add PostHog Environment Variables (URGENT)
+**Required for**: Task 1.0 - Project Setup
 **Status**: ⏳ Waiting for developer
 **Instructions**:
-1. Go to Supabase Dashboard → Project Settings → API
+1. Go to PostHog Dashboard → Project Settings → Project Variables
 2. Copy the following values:
-   - Project URL
-   - Anon/Public key
-   - Service Role key (keep secret!)
+   - Project API Key (starts with phc_)
+   - Host URL (us.i.posthog.com or eu.i.posthog.com)
 3. Add to `.env.local`:
    ```
-   NEXT_PUBLIC_SUPABASE_URL=your_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   NEXT_PUBLIC_POSTHOG_KEY=phc_your_key_here
+   NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
    ```
 4. Restart the development server
 
-**Why needed**: Cannot run migrations or test database connection without credentials
+**Why needed**: Cannot track user events or analytics without PostHog credentials
 
 ---
 
-### 2. Configure Cloudflare R2 CORS Policy
-**Required for**: Task 11.0 - File Upload
+### 2. Create PostHog Custom Dashboards
+**Required for**: Task 13.0 - Analytics Integration
 **Status**: ⏳ Waiting for developer
 **Instructions**:
-1. Go to Cloudflare Dashboard → R2 → Your Bucket → Settings
-2. Update CORS policy with provided configuration
-3. Confirm by commenting "DONE" on this action
+1. Log in to PostHog Dashboard
+2. Create the following dashboards:
+   - Role Distribution Dashboard
+   - Wizard Completion Funnel
+   - Feature Adoption Dashboard
+   - Project Health Dashboard
+   - Performance Metrics Dashboard
+3. Share dashboard URLs in a reply
 
-**Why needed**: File uploads will fail without proper CORS headers
+**Why needed**: Production monitoring requires pre-configured dashboards
 
 ---
 
 ## ✅ Completed Actions
 
-### ✓ Initialize Git Repository
+### ✓ Add Supabase Environment Variables
 **Completed**: 2024-01-15 10:00 UTC
 **Task**: 1.0 - Project Setup
-Developer ran: `git init && git add . && git commit -m "Initial commit"`
+Developer added: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-### ✓ Create Supabase Project
-**Completed**: 2024-01-15 12:00 UTC
+### ✓ Create PostHog Project
+**Completed**: 2024-01-15 13:00 UTC
 **Task**: 1.0 - Project Setup
-Developer created project "pm-wizard-app" in Supabase Cloud
+Developer created project "pm-wizard-app" in PostHog Cloud
 
 ---
 
@@ -430,16 +483,8 @@ When you complete a manual action:
 5. Agent will verify and continue
 ```
 
-## Emergency Stop
-
-If the user says "STOP" or "PAUSE":
-- Immediately halt current work
-- Save progress summary
-- Mark last completed sub-task
-- Wait for further instructions
-
 ---
 
-**Remember**: You are building a production application that will be used by real teams. Every line of code matters. Every role permission matters. Every security check matters. Be thorough, be careful, and always ask when uncertain.
+**Remember**: You are building a production application that will be used by real teams. Every line of code matters. Every role permission matters. Every security check matters. Every PostHog event tracked matters for understanding user behavior. Be thorough, be careful, and always ask when uncertain.
 
-**Are you ready to begin? Please confirm your understanding of these rules and request permission to start Task 1.0.**
+**Are you ready to begin? Please confirm your understanding of these rules and check the project progress before requesting permission to start your first task.**

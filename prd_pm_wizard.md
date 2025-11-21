@@ -1,5 +1,5 @@
 # Product Requirements Document: Wizard-Based Project & Task Management App
-## UPDATED: Role-Based Dashboard Architecture
+## UPDATED: Role-Based Dashboard Architecture + PostHog Analytics
 
 ## 1. Introduction/Overview
 
@@ -20,6 +20,7 @@ This document outlines the requirements for a conversational, wizard-driven proj
 5. Deliver actionable insights through visual analytics and automated reports
 6. Enable offline access and real-time sync via Progressive Web App (PWA) technology
 7. Integrate seamlessly with email and WhatsApp for notifications
+8. **Track user behavior and product usage with PostHog analytics to continuously improve UX for each role**
 
 ---
 
@@ -100,7 +101,7 @@ This document outlines the requirements for a conversational, wizard-driven proj
 
 **REQ-4.3.4:** Admins must have quick actions for: Create Project, Invite User, Create Team, Assign Tasks
 
-**REQ-4.3.5:** Admin dashboard must display alerts for: overdue tasks, quota limits approaching, users needing role updates
+**REQ-4.3.5:** Admin dashboard must display alerts for: overdue tasks, quota warnings, pending invitations
 
 ### 4.4 Member Dashboard Features
 
@@ -351,11 +352,27 @@ This document outlines the requirements for a conversational, wizard-driven proj
 
 **REQ-4.12.5:** The activity timeline must be filterable by date range and team member (Admin and Viewer dashboards only).
 
-**REQ-4.12.6:** The system must track internal user behavior metrics for UX improvement: wizard completion rate, time to complete wizard, feature adoption rates, dashboard usage by role, user retention, and task completion patterns.
+**REQ-4.12.6:** The system must track internal user behavior metrics for UX improvement using PostHog Product Analytics: wizard completion rate, time to complete wizard, feature adoption rates, dashboard usage by role, user retention, task completion patterns, and role switching patterns.
 
-**REQ-4.12.7:** Internal analytics must not be visible to end users.
+**REQ-4.12.7:** Internal analytics must not be visible to end users - tracked in PostHog backend dashboards only.
 
-**REQ-4.12.8:** The system must implement analytics tracking hooks from day one using Google Analytics 4 (free tier) for cost efficiency.
+**REQ-4.12.8:** The system must implement PostHog analytics tracking from day one with role-based event properties and organization grouping.
+
+**REQ-4.12.9:** PostHog must be initialized using `instrumentation-client.ts` for Next.js 15.3+ with the defaults flag set to '2025-05-24' and person_profiles set to 'identified_only'.
+
+**REQ-4.12.10:** All PostHog events must include the user's current role as an event property for role-based funnel analysis.
+
+**REQ-4.12.11:** User identification must occur on login using posthog.identify() with user ID, email, name, and current role.
+
+**REQ-4.12.12:** Organization-level analytics must use posthog.group() to track behavior at the organization level for tier-based analysis.
+
+**REQ-4.12.13:** The system must track the following key events:
+- Admin role: 'project_created', 'wizard_completed', 'wizard_step_completed', 'team_created', 'role_assigned', 'user_invited', 'task_assigned'
+- Member role: 'task_completed', 'task_updated', 'comment_added', 'file_uploaded', 'mention_sent'
+- Viewer role: 'dashboard_viewed', 'report_viewed', 'analytics_accessed', 'export_requested'
+- All roles: 'login', 'dashboard_switched', 'search_performed', 'notification_clicked'
+
+**REQ-4.12.14:** PostHog Session Replay and Feature Flags are planned as post-MVP features for UX optimization and gradual feature rollout.
 
 **Note:** Visual charts, weekly reports, PDF exports, and workload distribution analytics are post-MVP features.
 
@@ -469,25 +486,27 @@ This document outlines the requirements for a conversational, wizard-driven proj
 10. **Notification batching/digests**: All notifications sent immediately
 11. **Full offline mode with sync**: View-only offline access; no queued actions or conflict resolution
 12. **Workload distribution analytics**: No team member workload visualizations in MVP
+13. **PostHog Session Replay**: Planned post-MVP for UX debugging
+14. **PostHog Feature Flags**: Planned post-MVP for gradual feature rollout
 
 ### Long-term Exclusions
-13. **Task dependencies and blocking**: Tasks cannot block other tasks or have prerequisites
-14. **Gantt charts**: No timeline visualization beyond simple milestone grouping
-15. **Time tracking**: No manual time entry or timer functionality
-16. **Budget tracking**: No financial or cost management features
-17. **Resource allocation algorithms**: No automated resource planning beyond AI workload suggestions
-18. **Advanced Kanban boards**: No drag-and-drop Kanban or swimlane views
-19. **Custom field creation**: Users cannot add custom fields to tasks or projects
-20. **White-label or self-hosted options**: SaaS-only deployment initially
-21. **Mobile native apps**: PWA only; no iOS/Android native apps in MVP
-22. **Video conferencing integration**: No built-in video calls or screen sharing
-23. **Multi-language support**: English only in MVP
-24. **Recurring tasks**: No automated recurring task creation
-25. **Audit logs**: No detailed change history tracking (may be added for enterprise)
-26. **Public API**: No API access for third-party integrations
-27. **Custom branding**: No organization-level branding customization in MVP
-28. **WhatsApp integration**: No WhatsApp Business API integration in MVP
-29. **Enterprise features**: SSO, advanced audit logs, and complex permissions are planned way into the future
+15. **Task dependencies and blocking**: Tasks cannot block other tasks or have prerequisites
+16. **Gantt charts**: No timeline visualization beyond simple milestone grouping
+17. **Time tracking**: No manual time entry or timer functionality
+18. **Budget tracking**: No financial or cost management features
+19. **Resource allocation algorithms**: No automated resource planning beyond AI workload suggestions
+20. **Advanced Kanban boards**: No drag-and-drop Kanban or swimlane views
+21. **Custom field creation**: Users cannot add custom fields to tasks or projects
+22. **White-label or self-hosted options**: SaaS-only deployment initially
+23. **Mobile native apps**: PWA only; no iOS/Android native apps in MVP
+24. **Video conferencing integration**: No built-in video calls or screen sharing
+25. **Multi-language support**: English only in MVP
+26. **Recurring tasks**: No automated recurring task creation
+27. **Audit logs**: No detailed change history tracking (may be added for enterprise)
+28. **Public API**: No API access for third-party integrations
+29. **Custom branding**: No organization-level branding customization in MVP
+30. **WhatsApp integration**: No WhatsApp Business API integration in MVP
+31. **Enterprise features**: SSO, advanced audit logs, and complex permissions are planned way into the future
 
 ---
 
@@ -545,8 +564,8 @@ This document outlines the requirements for a conversational, wizard-driven proj
 - **PWA Framework**: next-pwa plugin for service worker management (basic caching only for MVP)
 - **Real-time**: Supabase Realtime for live updates (role-filtered subscriptions)
 - **AI Integration**: OpenAI API (GPT-4 Turbo or GPT-3.5 Turbo for cost efficiency)
-- **Email**: Resend for transactional emails
-- **Analytics**: Google Analytics 4 for user behavior tracking (free tier)
+- **Email**: Resend for transactional emails with React Email templates
+- **Analytics**: PostHog (Product Analytics with role-based event tracking, free tier up to 1M events/month, Session Replay and Feature Flags post-MVP)
 - **Testing**: Jest + React Testing Library for component tests, Playwright for E2E tests (including role-based access tests)
 - **Deployment**: Vercel (recommended for Next.js) or Netlify
 
@@ -565,6 +584,19 @@ This document outlines the requirements for a conversational, wizard-driven proj
 - **File Storage Architecture**: Cloudflare R2 with S3-compatible API, using presigned URLs for secure uploads/downloads
 - **AI Integration**: OpenAI API with streaming responses for better UX, rate limiting per organization tier
 - **Email Templates**: Resend with React Email for type-safe, responsive email templates
+- **Analytics Architecture**: 
+  - PostHog Integration: Client-side tracking via posthog-js with server-side event forwarding for sensitive actions
+  - Role-Based Event Tracking: All events include role context as properties for segmentation and funnel analysis
+  - Person Profiles: Identified users only (person_profiles: 'identified_only') to minimize unnecessary profile creation
+  - Group Analytics: Organization-level tracking using posthog.group() for tier-based behavior analysis
+  - Event Nomenclature: Consistent event naming: `{entity}_{action}` format (e.g., 'project_created', 'task_completed')
+  - Custom Properties: Each event includes: role, organizationId, projectId (where applicable), timestamp
+  - Pageview Tracking: Manual pageview capture with role context (capture_pageview: false)
+  - User Identification: posthog.identify() called on login with user metadata (id, email, name, role)
+  - PostHog Provider: React context wrapping app for automatic pageview tracking with role context
+  - Utilities: Helper functions in lib/posthog.ts for role-specific event tracking (trackAdminEvent, trackMemberEvent, trackViewerEvent)
+  - Dashboards: Custom PostHog dashboards for monitoring role-specific metrics, wizard completion funnels, and feature adoption rates
+  - Privacy: PostHog configured to respect user privacy with minimal data collection and no cross-domain tracking
 - **Scheduled Jobs**: Vercel Cron Jobs for:
   - Draft cleanup (delete drafts older than 7 days)
   - Soft-delete cleanup (permanently delete records older than 30 days)
@@ -599,6 +631,7 @@ This document outlines the requirements for a conversational, wizard-driven proj
 - **Search**: Search results should appear in < 1 second
 - **Offline Sync**: Changes should sync within 5 seconds of reconnection
 - **Real-time Updates**: Role-filtered real-time updates delivered within 2 seconds
+- **PostHog Event Tracking**: Events should be captured without noticeable performance impact
 
 ### 7.5 Scalability Considerations
 
@@ -611,6 +644,83 @@ This document outlines the requirements for a conversational, wizard-driven proj
 - **Storage Monitoring**: Track per-organization storage usage via S3 API or Supabase Storage API
 - **Connection Pooling**: Supabase handles connection pooling automatically (PgBouncer)
 - **Role-Based Query Optimization**: Cache role permission checks, use Supabase RLS for automatic filtering
+- **PostHog Event Batching**: PostHog automatically batches events to minimize network overhead
+
+### 7.6 PostHog Configuration
+
+#### PostHog Setup Requirements
+
+**Installation Method**: Use PostHog's automated setup wizard for fastest integration:
+```bash
+npx -y @posthog/wizard@latest
+```
+
+Or manual installation:
+```bash
+npm install posthog-js
+```
+
+**Environment Variables** (to be added to .env.local and hosting provider):
+```
+NEXT_PUBLIC_POSTHOG_KEY=phc_your_project_key_here
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com  # or eu.i.posthog.com for EU hosting
+```
+
+**Initialization File** (`instrumentation-client.ts` in project root):
+```typescript
+import posthog from 'posthog-js'
+
+posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+  api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  defaults: '2025-05-24',
+  person_profiles: 'identified_only',
+  capture_pageview: false,
+  capture_pageleave: true,
+})
+```
+
+**Required Configuration Files**:
+1. `lib/posthog.ts` - Helper utilities for role-based event tracking
+2. `components/providers/posthog-provider.tsx` - React provider for automatic pageview tracking
+3. `hooks/use-posthog.ts` - Custom hook with role context
+
+**Event Tracking Strategy**:
+- Autocapture enabled for baseline metrics (clicks, form submissions)
+- Manual events for key actions (project creation, task completion, role assignment)
+- All manual events MUST include role property
+- Organization ID tracked via posthog.group() for tier-based analysis
+
+**Custom Dashboards to Create in PostHog**:
+1. **Role Distribution Dashboard**: Track active users by role, role switching patterns
+2. **Wizard Completion Funnel**: Step-by-step wizard analytics, drop-off points, completion rates by role
+3. **Feature Adoption Dashboard**: Track which features each role uses most, adoption rates over time
+4. **Project Health Dashboard**: Project creation rate, task completion rate, team collaboration metrics
+5. **Performance Metrics**: Dashboard load times by role, API response times, error rates
+
+**Person Properties** (set via posthog.identify()):
+- user_id (required)
+- email
+- name
+- role (updated on role switch)
+- organization_id
+- organization_tier (Free, Starter, Growth)
+- signup_date
+- last_login
+
+**Group Properties** (set via posthog.group()):
+- organization_id (group key)
+- organization_name
+- tier (Free, Starter, Growth)
+- member_count
+- project_count
+- created_at
+
+**Privacy & Compliance**:
+- PostHog configured with minimal data collection
+- No sensitive data (passwords, API keys) sent to PostHog
+- User IP addresses can be masked if required for GDPR compliance
+- Cookie consent banner integration (Section 19.0)
+- Right to deletion implemented via PostHog API
 
 ---
 
@@ -618,26 +728,26 @@ This document outlines the requirements for a conversational, wizard-driven proj
 
 ### 8.1 User Adoption Metrics
 
-- **Wizard Completion Rate**: Target 85%+ of users complete project creation wizard
-- **Time to First Project**: Target < 5 minutes from signup to first project created (Admin users)
-- **User Retention**: Target 60%+ weekly active users after 30 days (across all roles)
-- **Feature Adoption**: Target 70%+ of Members use task updates and comments within first week
-- **Dashboard Usage**: Track time spent in each dashboard type, aim for Admin 40%, Member 45%, Viewer 15%
-- **Role Distribution**: Target healthy distribution (Admin 20%, Member 60%, Viewer 20%)
+- **Wizard Completion Rate**: Target 85%+ of users complete project creation wizard (tracked in PostHog funnel)
+- **Time to First Project**: Target < 5 minutes from signup to first project created (Admin users) (tracked via PostHog)
+- **User Retention**: Target 60%+ weekly active users after 30 days (across all roles) (tracked via PostHog cohorts)
+- **Feature Adoption**: Target 70%+ of Members use task updates and comments within first week (tracked via PostHog)
+- **Dashboard Usage**: Track time spent in each dashboard type, aim for Admin 40%, Member 45%, Viewer 15% (tracked via PostHog)
+- **Role Distribution**: Target healthy distribution (Admin 20%, Member 60%, Viewer 20%) (tracked via PostHog)
 
 ### 8.2 Performance Metrics
 
-- **Task Completion Rate**: Track % of tasks marked complete vs. created (Member focus metric)
-- **Project Velocity**: Measure average time to complete projects (Admin focus metric)
-- **Collaboration Engagement**: Track comment frequency and @mention usage (Member and Admin)
-- **Viewer Engagement**: Track analytics page views and report access (Viewer focus metric)
+- **Task Completion Rate**: Track % of tasks marked complete vs. created (Member focus metric) (tracked via PostHog)
+- **Project Velocity**: Measure average time to complete projects (Admin focus metric) (tracked via PostHog)
+- **Collaboration Engagement**: Track comment frequency and @mention usage (Member and Admin) (tracked via PostHog)
+- **Viewer Engagement**: Track analytics page views and report access (Viewer focus metric) (tracked via PostHog)
 
 ### 8.3 Business Metrics
 
-- **User Growth**: Track monthly active users (MAU) segmented by role
-- **User Satisfaction**: Target NPS score > 40 (segment by role)
+- **User Growth**: Track monthly active users (MAU) segmented by role (tracked via PostHog)
+- **User Satisfaction**: Target NPS score > 40 (segment by role) (tracked via PostHog surveys post-MVP)
 - **Support Ticket Volume**: Measure reduction in "how to" support requests vs. traditional PM tools
-- **Dashboard Preference**: Track which role users spend most time in (for users with multiple roles)
+- **Dashboard Preference**: Track which role users spend most time in (for users with multiple roles) (tracked via PostHog)
 
 ---
 
@@ -669,19 +779,54 @@ This document outlines the requirements for a conversational, wizard-driven proj
 
 11. **Monitoring & Error Tracking**: Which tools should be used for application monitoring and error tracking? (Suggested: Sentry for errors, Vercel Analytics for performance)
 
+12. **PostHog Retention**: How long should PostHog event data be retained? (Suggested: Use PostHog's default retention, typically 7 years for free tier)
+
 ---
 
 ## Document Metadata
 
-- **Document Version**: 2.0 (Updated for Role-Based Dashboards)
-- **Last Updated**: November 18, 2025
+- **Document Version**: 2.1 (Updated for PostHog Integration)
+- **Last Updated**: January 2025
 - **Document Owner**: Product Team
 - **Target Audience**: Junior to Mid-Level Developers
-- **Estimated Development Timeline**: 14-18 weeks for MVP (increased from 12-16 weeks due to role-based complexity)
-- **Major Changes from v1.0**:
-  - Unified signup flow for all users
-  - Three distinct role-based dashboards (Admin, Member, Viewer)
-  - Role-specific permissions and features throughout the application
-  - Updated data model with user_project_roles junction table
-  - Role-aware UI components and navigation
-  - Enhanced security with role-based RLS policies
+- **Estimated Development Timeline**: 14-18 weeks for MVP
+- **Major Changes from v2.0**:
+  - Replaced Google Analytics 4 with PostHog Product Analytics
+  - Added comprehensive PostHog integration requirements (Section 4.12)
+  - Specified role-based event tracking strategy throughout
+  - Added PostHog configuration section (Section 7.6)
+  - Updated success metrics to reference PostHog tracking (Section 8)
+  - Added PostHog-specific open questions (Section 9)
+  - Updated technology stack to include PostHog (Section 7.1)
+  - Enhanced analytics architecture notes with PostHog details (Section 7.2)
+
+---
+
+## Appendix: Benefits of PostHog Over Google Analytics 4
+
+**Why PostHog is Superior for This Project**:
+
+1. **Product Analytics Focus**: Built for B2B SaaS with group analytics for organizations, perfect for tracking organization-level behavior
+2. **All-in-One Platform**: Includes Session Replay, Feature Flags, Surveys, and Experiments - no need for separate tools like HotJar ($99+/mo)
+3. **Better User Identity**: Person profiles with full history, can store email addresses (GA4 is anonymous-first and cannot store PII)
+4. **Data Ownership**: Self-hosting option for enterprise customers requiring data sovereignty (important for GDPR compliance)
+5. **Developer-Friendly**: SQL access, extensive APIs, easier integration with Next.js, official Next.js integration via @posthog/wizard
+6. **Role-Based Analytics**: Natural fit for tracking behavior by user role with custom properties and event segmentation
+7. **Generous Free Tier**: 1M events/month free, then $0.00031/event with volume discounts (GA4 samples data on high traffic)
+8. **No Data Sampling**: Full fidelity analytics at all traffic levels unlike GA4 which samples heavily
+9. **Session Replay** (post-MVP): Visual debugging without additional tools, understand exact user behavior
+10. **Feature Flags** (post-MVP): Built-in for gradual feature rollout and A/B testing specific to user roles
+11. **Better Privacy**: GDPR-compliant with self-hosting option, clearer data policies than Google
+
+**Cost Comparison**:
+- PostHog: Free up to 1M events/month, then $0.00031/event (decreasing with volume)
+- GA4: Free but samples data, limited customization, requires separate tools for session replay ($99+/mo) and feature flags
+- **Estimated Savings**: $100-300/month by consolidating analytics, session replay, and feature flags into PostHog
+
+**Integration Advantages for Next.js**:
+- Official Next.js integration via @posthog/wizard for automated setup
+- Server-side rendering support with proper hydration handling
+- Edge runtime compatible for Vercel Edge Functions
+- TypeScript support out of the box
+- React hooks for easy component integration
+- instrumentation-client.ts support for Next.js 15.3+ (lightweight, fast initialization)

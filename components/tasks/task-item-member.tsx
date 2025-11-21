@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { trackEvent } from '@/lib/posthog';
 import { MessageSquare, Paperclip } from 'lucide-react';
 
 interface TaskItemMemberProps {
@@ -16,11 +17,19 @@ export function TaskItemMember({
   onComment,
   onAttach,
 }: TaskItemMemberProps) {
+  const handleToggle = () => {
+    const newStatus = task.status === 'completed' ? 'in_progress' : 'completed';
+    if (newStatus === 'completed') {
+      trackEvent('task_completed', { role: 'member', task_id: task.id });
+    }
+    onToggle(task.id, task.status);
+  };
+
   return (
     <div className="flex items-center gap-4 rounded-lg border p-4">
       <Checkbox
         checked={task.status === 'completed'}
-        onCheckedChange={() => onToggle(task.id, task.status)}
+        onCheckedChange={handleToggle}
       />
       <div className="flex-1">
         <p className={task.status === 'completed' ? 'line-through' : ''}>

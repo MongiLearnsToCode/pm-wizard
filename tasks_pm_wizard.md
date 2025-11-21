@@ -1,7 +1,7 @@
 # Task List: Wizard-Based Project & Task Management App
-## UPDATED: Role-Based Dashboard Architecture
+## UPDATED: Role-Based Dashboard Architecture + PostHog Analytics
 
-**Source PRD:** `prd-wizard-task-app.md` (v2.0 - Role-Based Dashboards)
+**Source PRD:** `prd-wizard-task-app.md` (v2.1 - PostHog Integration)
 
 ## Current State Assessment
 
@@ -16,7 +16,7 @@ This is a **greenfield project** - no existing codebase. We will be building fro
 - **Real-time:** Supabase Realtime subscriptions with role-based filtering
 - **AI:** OpenAI API (GPT-4 Turbo or GPT-3.5 Turbo for cost efficiency, Admin-only features)
 - **Email:** Resend with React Email for transactional emails
-- **Analytics:** Google Analytics 4
+- **Analytics:** PostHog (Product Analytics with role-based event tracking, Session Replay post-MVP, Feature Flags post-MVP)
 - **Testing:** Jest + React Testing Library (components), Playwright (E2E including role-based access)
 - **Deployment:** Vercel (recommended) or Netlify
 
@@ -43,7 +43,8 @@ This is a **greenfield project** - no existing codebase. We will be building fro
 ## Relevant Files
 
 ### Next.js Application Structure (Updated)
-- `app/layout.tsx` - Root layout with providers (Supabase, theme, analytics, **role context**)
+- `app/layout.tsx` - Root layout with providers (Supabase, theme, **PostHog**, **role context**)
+- `instrumentation-client.ts` - PostHog initialization (Next.js 15.3+)
 - `app/page.tsx` - Landing/login page (unified for all users)
 - `app/(auth)/login/page.tsx` - Login page
 - `app/(auth)/register/page.tsx` - Registration page (unified)
@@ -122,11 +123,13 @@ This is a **greenfield project** - no existing codebase. We will be building fro
 - **`components/onboarding/admin-tour.tsx`** - Admin onboarding tutorial
 - **`components/onboarding/member-tour.tsx`** - Member onboarding tutorial
 - **`components/onboarding/viewer-tour.tsx`** - Viewer onboarding tutorial
+- **`components/providers/posthog-provider.tsx`** - PostHog context provider with role tracking
 
 ### Hooks & Utilities - Updated
 - **`hooks/use-role.ts`** - Hook for accessing current user role
 - **`hooks/use-role-permissions.ts`** - Hook for checking specific permissions
 - **`hooks/use-dashboard-context.ts`** - Hook for dashboard state management
+- **`hooks/use-posthog.ts`** - Hook for PostHog analytics with role context
 - `hooks/use-auth.ts` - Supabase auth hook **with role detection**
 - `hooks/use-projects.ts` - Project data fetching hook **with role-based filtering** (uses Zustand)
 - `hooks/use-tasks.ts` - Task data fetching hook **with role-based filtering** (uses Zustand)
@@ -141,7 +144,7 @@ This is a **greenfield project** - no existing codebase. We will be building fro
 - `lib/cloudflare-r2.ts` - Cloudflare R2 client utilities (S3-compatible)
 - `lib/openai.ts` - OpenAI API integration with streaming support **Admin-only**
 - `lib/resend.ts` - Resend email service utilities **with React Email templates**
-- `lib/analytics.ts` - GA4 tracking utilities **with role event tracking**
+- **`lib/posthog.ts`** - PostHog client utilities **with role event tracking helpers**
 - `lib/utils.ts` - General utility functions
 - `lib/validations.ts` - Zod validation schemas **with role-based validation**
 - **`store/role-store.ts`** - Zustand role state management
@@ -158,10 +161,11 @@ This is a **greenfield project** - no existing codebase. We will be building fro
 - `supabase/migrations/20240101000002_rls_policies.sql` - Row Level Security policies **role-based**
 - **`supabase/migrations/20240101000003_role_functions.sql`** - SQL functions for role checking
 - `supabase/seed.sql` - Database seeding script **with role assignments**
-- `.env.local` - Local environment variables
+- `.env.local` - Local environment variables (including PostHog keys)
 - `.env.example` - Environment variables template
 - `next.config.js` - Next.js configuration (with PWA plugin)
 - `middleware.ts` - **Next.js middleware for role-based route protection**
+- `instrumentation-client.ts` - PostHog initialization for client-side tracking
 - `tailwind.config.ts` - Tailwind CSS configuration
 - `components.json` - shadcn/ui configuration
 - `tsconfig.json` - TypeScript configuration
@@ -190,14 +194,18 @@ This is a **greenfield project** - no existing codebase. We will be building fro
   - [ ] 1.2 Install and configure shadcn/ui: Run `npx shadcn-ui@latest init`, configure Tailwind CSS with design tokens
   - [ ] 1.3 Set up Supabase project: Create project in Supabase Cloud, note project URL and anon key
   - [ ] 1.4 Install Supabase client libraries: `npm install @supabase/supabase-js @supabase/ssr`
-  - [ ] 1.5 Configure environment variables: Create `.env.local` with NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, Cloudflare R2 credentials (access key, secret key, bucket name, account ID), OpenAI API key, Resend API key
+  - [ ] 1.5 Configure environment variables: Create `.env.local` with NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, Cloudflare R2 credentials (access key, secret key, bucket name, account ID), OpenAI API key, Resend API key, NEXT_PUBLIC_POSTHOG_KEY, NEXT_PUBLIC_POSTHOG_HOST
   - [ ] 1.6 Set up Cloudflare R2 bucket: Create bucket in Cloudflare dashboard, configure CORS settings, generate R2 API tokens, note endpoint URL
-  - [ ] 1.7 Install additional dependencies: `npm install zustand zod @aws-sdk/client-s3 openai resend react-email @radix-ui/react-icons lucide-react date-fns`
+  - [ ] 1.7 Install additional dependencies: `npm install zustand zod @aws-sdk/client-s3 openai resend react-email @radix-ui/react-icons lucide-react date-fns posthog-js`
   - [ ] 1.8 Configure ESLint and Prettier for consistent code style
   - [ ] 1.9 Set up testing framework: Install Jest, React Testing Library, and Playwright for E2E tests
   - [ ] 1.10 Create project folder structure including role-specific routes: `app/(admin)/`, `app/(member)/`, `app/(viewer)/`, `components/role/`, `lib/rbac.ts`, `store/` (for Zustand stores), `emails/` (for React Email templates)
   - [ ] 1.11 Initialize Git repository with `.gitignore` for node_modules, .env files, and .next build artifacts
   - [ ] 1.12 Create README.md with setup instructions and role-based architecture overview
+  - [ ] 1.13 Set up PostHog project: Create project in PostHog Cloud (free tier), note API key and host URL (us.i.posthog.com or eu.i.posthog.com)
+  - [ ] 1.14 Install PostHog: Run `npx -y @posthog/wizard@latest` for automated setup OR `npm install posthog-js` for manual install
+  - [ ] 1.15 Create instrumentation-client.ts: Initialize PostHog with environment variables, defaults flag '2025-05-24', person_profiles: 'identified_only', capture_pageview: false
+  - [ ] 1.16 Add PostHog environment variables to .env.local and .env.example: NEXT_PUBLIC_POSTHOG_KEY, NEXT_PUBLIC_POSTHOG_HOST
 
 - [ ] 2.0 Database Schema & Core Models with Role Support
   - [ ] 2.1 Design database schema: Create ERD with entities including **user_project_roles** and **user_organization_roles** junction tables
@@ -392,22 +400,52 @@ This is a **greenfield project** - no existing codebase. We will be building fro
   - [ ] 12.14 Create notification digest for Viewers: Weekly summary email using React Email template with project highlights
   - [ ] 12.15 Write tests: Notification creation by role, Resend email sending to correct roles, React Email template rendering, role-based filtering, real-time delivery
 
-- [ ] 13.0 Analytics with Role-Appropriate Views
-  - [ ] 13.1 Set up Google Analytics 4 with custom dimensions for roles: Track which role users are active in
-  - [ ] 13.2 Implement role-based event tracking: Track Admin actions (project creation), Member actions (task completion), Viewer actions (report viewing)
-  - [ ] 13.3 Create analytics API routes with role filtering: `app/api/analytics/admin/route.ts`, `app/api/analytics/member/route.ts`, `app/api/analytics/viewer/route.ts`
-  - [ ] 13.4 Build Admin analytics component: `components/analytics/admin-analytics.tsx` with comprehensive project analytics, team performance, individual metrics, workload distribution
-  - [ ] 13.5 Build Member analytics component: `components/analytics/member-analytics.tsx` with personal stats only (own task completion, time tracking, productivity)
-  - [ ] 13.6 Build Viewer analytics component: `components/analytics/viewer-analytics.tsx` with high-level metrics (project health, team velocity, milestone progress)
-  - [ ] 13.7 Implement role-specific progress indicators: Different metrics for each role (Admins see all, Members see personal, Viewers see aggregated)
-  - [ ] 13.8 Create activity timeline with role filtering: Admins see all activities, Members see own activities, Viewers see milestone/project-level activities
-  - [ ] 13.9 Add activity filtering by role: Date range and team member filters (available to Admins and Viewers only)
-  - [ ] 13.10 Create role-specific stat cards: Different KPIs for each role using shadcn Card
-  - [ ] 13.11 Implement CSV export with role restrictions: Admins can export all data, Members can export own tasks, Viewers request exports from Admins
-  - [ ] 13.12 Add export approval flow for Viewers: Request button → notification to Admin → Admin approves → Viewer gets download link
-  - [ ] 13.13 Track internal metrics by role: Dashboard usage time per role, feature adoption per role, user satisfaction per role
-  - [ ] 13.14 Create analytics pages: `app/(admin)/analytics/page.tsx`, `app/(member)/analytics/page.tsx`, `app/(viewer)/analytics/page.tsx`
-  - [ ] 13.15 Write tests: Event tracking per role, analytics calculation, role-based filtering, CSV export permissions
+- [ ] 13.0 Analytics with Role-Appropriate Views (PostHog Integration)
+  - [ ] 13.1 Create PostHog utilities: `lib/posthog.ts` with helper functions for tracking role-specific events
+  - [ ] 13.2 Implement role-based event tracking functions: trackAdminEvent, trackMemberEvent, trackViewerEvent with automatic role property inclusion
+  - [ ] 13.3 Create usePostHog hook: `hooks/use-posthog.ts` that automatically includes current user role in all events
+  - [ ] 13.4 Build PostHog Provider: `components/providers/posthog-provider.tsx` wrapping app with user identification and pageview tracking
+  - [ ] 13.5 Implement user identification on login: Call posthog.identify() with user ID, email, name, and current role
+  - [ ] 13.6 Set up organization group analytics: Use posthog.group('organization', orgId) to track organization-level behavior
+  - [ ] 13.7 Implement key event tracking for Admin role:
+    - 'project_created' - When admin creates project via wizard
+    - 'wizard_completed' - Wizard flow completion with step duration
+    - 'team_created' - Team management actions
+    - 'role_assigned' - Role assignment to users
+    - 'user_invited' - User invitation sent
+    - 'task_assigned' - Task assignment to members
+  - [ ] 13.8 Implement key event tracking for Member role:
+    - 'task_completed' - Task marked as complete
+    - 'task_updated' - Task details edited
+    - 'comment_added' - Comment posted on task
+    - 'file_uploaded' - File attached to task
+    - 'mention_sent' - @mention used in comment
+  - [ ] 13.9 Implement key event tracking for Viewer role:
+    - 'dashboard_viewed' - Dashboard access
+    - 'report_viewed' - Report opened
+    - 'analytics_accessed' - Analytics tab viewed
+    - 'export_requested' - Export request made
+  - [ ] 13.10 Implement common event tracking for all roles:
+    - 'login' - User authentication with role context
+    - 'dashboard_switched' - Role/dashboard change event
+    - 'search_performed' - Search query with role filter context
+    - 'notification_clicked' - Notification interaction
+  - [ ] 13.11 Add wizard step tracking: Track each wizard step completion for funnel analysis (step_name, step_duration, role)
+  - [ ] 13.12 Create analytics API routes with role filtering: `app/api/analytics/admin/route.ts`, `app/api/analytics/member/route.ts`, `app/api/analytics/viewer/route.ts`
+  - [ ] 13.13 Build Admin analytics component: `components/analytics/admin-analytics.tsx` with comprehensive project analytics, team performance, individual metrics, workload distribution
+  - [ ] 13.14 Build Member analytics component: `components/analytics/member-analytics.tsx` with personal stats only (own task completion, time tracking, productivity)
+  - [ ] 13.15 Build Viewer analytics component: `components/analytics/viewer-analytics.tsx` with high-level metrics (project health, team velocity, milestone progress)
+  - [ ] 13.16 Implement role-specific progress indicators: Different metrics for each role (Admins see all, Members see personal, Viewers see aggregated)
+  - [ ] 13.17 Create activity timeline with role filtering: Admins see all activities, Members see own activities, Viewers see milestone/project-level activities
+  - [ ] 13.18 Add activity filtering by role: Date range and team member filters (available to Admins and Viewers only)
+  - [ ] 13.19 Create role-specific stat cards: Different KPIs for each role using shadcn Card
+  - [ ] 13.20 Implement CSV export with role restrictions: Admins can export all data, Members can export own tasks, Viewers request exports from Admins
+  - [ ] 13.21 Add export approval flow for Viewers: Request button → notification to Admin → Admin approves → Viewer gets download link
+  - [ ] 13.22 Set up PostHog custom dashboards: Create dashboards for Role Distribution, Wizard Completion Funnel, Feature Adoption, Project Health, Performance Metrics
+  - [ ] 13.23 Configure PostHog person properties: Set properties for user_id, email, name, role, organization_id, organization_tier, signup_date, last_login
+  - [ ] 13.24 Configure PostHog group properties: Set properties for organization (organization_id, name, tier, member_count, project_count, created_at)
+  - [ ] 13.25 Create analytics pages: `app/(admin)/analytics/page.tsx`, `app/(member)/analytics/page.tsx`, `app/(viewer)/analytics/page.tsx`
+  - [ ] 13.26 Write tests: Event tracking per role, analytics calculation, role-based filtering, CSV export permissions, PostHog integration, user identification, group analytics
 
 - [ ] 14.0 AI Integration (Admin Only)
   - [ ] 14.1 Protect AI endpoints: Add middleware to all AI routes ensuring only Admins can access
@@ -537,31 +575,35 @@ This is a **greenfield project** - no existing codebase. We will be building fro
   - [ ] 21.14 Conduct manual QA by role: Have testers use each role exclusively for realistic testing
   - [ ] 21.15 Set up CI/CD with role-based test suites: Separate test jobs for Admin, Member, Viewer flows
   - [ ] 21.16 Add code coverage by role: Track coverage for role-specific code paths
+  - [ ] 21.17 Test PostHog event tracking: Verify all role-specific events fire correctly with proper properties
+  - [ ] 21.18 Test PostHog user identification: Verify posthog.identify() called on login with correct data
+  - [ ] 21.19 Test PostHog group analytics: Verify organization-level tracking works correctly
 
 - [ ] 22.0 Deployment & Monitoring with Role Tracking
   - [ ] 22.1 Prepare Supabase for production: Verify all migrations including role tables applied
   - [ ] 22.2 Configure Cloudflare R2 for production: Verify CORS settings, set up lifecycle rules for automatic cleanup, confirm bucket policies
   - [ ] 22.3 Set up Vercel project: Import GitHub repo, configure build settings, set framework preset to Next.js
-  - [ ] 22.4 Configure production environment variables: Add all env vars in Vercel dashboard (Supabase keys, Cloudflare R2 credentials, OpenAI API key, Resend API key)
+  - [ ] 22.4 Configure production environment variables: Add all env vars in Vercel dashboard (Supabase keys, Cloudflare R2 credentials, OpenAI API key, Resend API key, PostHog keys)
   - [ ] 22.5 Set up custom domain: Add domain in Vercel, configure DNS, enable auto-SSL
   - [ ] 22.6 Configure Vercel Cron Jobs: Set up cron schedules for cleanup (daily), grace period checks (daily), reminders (hourly)
   - [ ] 22.7 Set up Resend in production: Verify sending domain in Resend dashboard, configure DKIM and SPF records in DNS
   - [ ] 22.8 Test React Email templates in production: Send test emails for all template types (task assigned, mention, digest)
-  - [ ] 22.9 Configure analytics: Verify GA4 tracking ID in production env, test event tracking works
+  - [ ] 22.9 Configure PostHog in production: Verify PostHog API key in production env, test event tracking works, set up role-based dashboards in PostHog UI
   - [ ] 22.10 Set up error tracking: Configure Sentry (or Vercel Analytics) for both frontend and API routes, test error capture
   - [ ] 22.11 Enable Vercel Web Analytics: Turn on Web Analytics in Vercel dashboard for performance monitoring
   - [ ] 22.12 Set up uptime monitoring: Configure UptimeRobot or similar to monitor homepage and API health endpoint
   - [ ] 22.13 Configure database backups: Enable Supabase automatic backups (should be on by default), verify backup schedule
   - [ ] 22.14 Create health check endpoints: `app/api/health/route.ts` returning status, `app/api/health/db/route.ts` checking Supabase connection, `app/api/health/r2/route.ts` checking R2 connectivity
-  - [ ] 22.15 Test deployment with all roles: Register test users, assign roles, verify each dashboard, test file uploads to R2, test OpenAI integration
+  - [ ] 22.15 Test deployment with all roles: Register test users, assign roles, verify each dashboard, test file uploads to R2, test OpenAI integration, verify PostHog tracking
   - [ ] 22.16 Verify Cron jobs: Check Vercel logs to ensure scheduled jobs are running correctly
-  - [ ] 22.17 Set up monitoring dashboard: Create simple dashboard showing key metrics (uptime, response times, error rates)
+  - [ ] 22.17 Set up PostHog monitoring dashboards: Create custom dashboards showing wizard completion funnel, role distribution, feature adoption rates, performance metrics
   - [ ] 22.18 Create deployment runbook: Document deployment process, rollback procedure, environment variable checklist
   - [ ] 22.19 Configure Vercel preview deployments: Ensure preview URLs work for testing PR changes before merging
   - [ ] 22.20 Set up production alerts: Configure Sentry alerts for critical errors, Vercel alerts for deployment failures, Resend webhooks for email delivery failures
   - [ ] 22.21 Verify OpenAI API budget monitoring: Check usage dashboard, set up alerts if approaching $100/month
   - [ ] 22.22 Test Cloudflare R2 performance: Verify upload/download speeds, presigned URL generation, file cleanup
-  - [ ] 22.23 Create post-deployment checklist: Verify role-based routing, RLS policies, role assignments, file storage, email delivery, AI features
+  - [ ] 22.23 Verify PostHog is tracking production events: Check PostHog dashboard for live events, verify person profiles are being created, confirm group analytics working
+  - [ ] 22.24 Create post-deployment checklist: Verify role-based routing, RLS policies, role assignments, file storage, email delivery, AI features, PostHog tracking
 
 ---
 
@@ -571,48 +613,48 @@ Based on the PRD estimate of 14-18 weeks for MVP with role-based dashboards:
 
 ### Phase 1: Foundation & Role Infrastructure (Weeks 1-3)
 - Tasks 1.0, 2.0, 3.0, 4.0 - Infrastructure, database with role tables, authentication with role detection, role state management
-- **Milestone**: Developers can register, be assigned roles, login with role detection, and access role-appropriate API endpoints
+- **Milestone**: Developers can register, be assigned roles, login with role detection, and access role-appropriate API endpoints. PostHog tracking initialized.
 
 ### Phase 2: Dashboard Shells & Navigation (Weeks 4-5)
 - Tasks 5.0, 6.0, 7.0 - Admin, Member, and Viewer dashboard layouts with role-specific navigation
-- **Milestone**: Three distinct dashboards render correctly with proper navigation for each role
+- **Milestone**: Three distinct dashboards render correctly with proper navigation for each role. PostHog tracking dashboard views.
 
 ### Phase 3: Core Data Models & Permissions (Weeks 6-8)
 - Tasks 8.0, 9.0, 10.0 - Organizations with role assignment, Admin project wizard with role assignment, task management with role-based permissions
-- **Milestone**: Admins can create projects and assign roles, Members can edit own tasks, Viewers have read-only access
+- **Milestone**: Admins can create projects and assign roles, Members can edit own tasks, Viewers have read-only access. PostHog tracks wizard completion funnel.
 
 ### Phase 4: Collaboration & Notifications (Weeks 9-11)
 - Tasks 11.0, 12.0 - Comments/files with role restrictions, notifications with role-appropriate content
-- **Milestone**: Team collaboration works with proper role restrictions, notifications routed correctly by role
+- **Milestone**: Team collaboration works with proper role restrictions, notifications routed correctly by role. PostHog tracks collaboration events.
 
 ### Phase 5: Analytics & Advanced Features (Weeks 12-14)
-- Tasks 13.0, 14.0, 15.0, 16.0 - Role-specific analytics, AI for Admins only, quota management (Admin only), search with role filtering
-- **Milestone**: Each role has appropriate analytics, Admin AI features work, quotas enforced, search respects roles
+- Tasks 13.0, 14.0, 15.0, 16.0 - PostHog analytics integration, AI for Admins only, quota management (Admin only), search with role filtering
+- **Milestone**: PostHog fully integrated with role-based tracking, Admin AI features work, quotas enforced, search respects roles
 
 ### Phase 6: Polish & Compliance (Weeks 15-16)
 - Tasks 17.0, 18.0, 19.0, 20.0 - Soft-delete (Admin only), PWA, GDPR compliance, role-specific onboarding
-- **Milestone**: App is installable, GDPR compliant, onboarding guides users per role
+- **Milestone**: App is installable, GDPR compliant, onboarding guides users per role. PostHog tracks onboarding completion.
 
 ### Phase 7: Testing & Deployment (Weeks 17-18)
 - Tasks 21.0, 22.0 - Comprehensive role-based testing, production deployment with role monitoring
-- **Milestone**: MVP deployed with all three role dashboards functional and tested
+- **Milestone**: MVP deployed with all three role dashboards functional and tested. PostHog production monitoring active.
 
 ---
 
 ## Priority Recommendations (Updated)
 
 ### Must-Have for MVP Launch
-- Tasks 1.0-7.0 (Infrastructure through all three dashboard shells)
+- Tasks 1.0-7.0 (Infrastructure through all three dashboard shells, including PostHog setup)
 - Task 8.0 (Organization & team management with role assignment)
 - Task 9.0 (Admin wizard with role assignment)
 - Task 10.0 (Task management with role permissions)
 - Task 11.0 (Comments/files with role restrictions)
 - Task 12.0 (Notifications with role routing)
-- Task 21.0 (Core role-based testing)
-- Task 22.0 (Deployment with role monitoring)
+- Task 13.0 (PostHog analytics with role-based event tracking)
+- Task 21.0 (Core role-based testing including PostHog event verification)
+- Task 22.0 (Deployment with role monitoring and PostHog production setup)
 
 ### Should-Have (Can launch without, but add quickly)
-- Task 13.0 (Role-specific analytics - key for each role's value)
 - Task 14.0 (AI for Admins - differentiator)
 - Task 15.0 (Quota management - Admin feature)
 - Task 16.0 (Search with role filtering - improves UX)
@@ -622,6 +664,8 @@ Based on the PRD estimate of 14-18 weeks for MVP with role-based dashboards:
 - Task 17.0 (Soft-delete Admin features)
 - Task 18.0 (Full PWA offline mode)
 - Task 19.0 (GDPR - required for EU but can be added post-MVP for US launch)
+- PostHog Session Replay (for UX debugging)
+- PostHog Feature Flags (for gradual feature rollout)
 - Advanced role features (custom roles, granular permissions)
 - Dashboard customization per role
 - Cross-project views for Members
@@ -644,6 +688,7 @@ For every new feature, verify:
 4. ✅ RLS policies enforce permissions at database level
 5. ✅ API routes validate role before processing
 6. ✅ UI elements are hidden/disabled appropriately per role
+7. ✅ PostHog events fire correctly with role property
 
 ### Database Management
 - **Migrations**: `supabase migration new <name>` for role-related schema changes
@@ -681,6 +726,332 @@ Same as before, plus:
 - Configure Cloudflare R2 credentials correctly (endpoint, account ID, access keys)
 - Set up OpenAI API key with appropriate usage limits
 - Configure Resend with verified sending domain
+- **Set up PostHog project and add API keys to .env.local**
+
+### PostHog Setup & Integration
+
+#### Installation
+```bash
+# Option 1: Automated wizard (recommended)
+npx -y @posthog/wizard@latest
+
+# Option 2: Manual installation
+npm install posthog-js
+```
+
+#### Environment Variables
+Add to `.env.local`:
+```bash
+NEXT_PUBLIC_POSTHOG_KEY=phc_your_key_here
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com  # or eu.i.posthog.com
+```
+
+#### Initialization (Next.js 15.3+)
+Create `instrumentation-client.ts` in project root:
+```typescript
+// instrumentation-client.ts
+import posthog from 'posthog-js'
+
+posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+  api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  defaults: '2025-05-24',
+  person_profiles: 'identified_only',
+  capture_pageview: false, // We'll do this manually with role context
+  capture_pageleave: true,
+})
+```
+
+#### Role-Based Event Tracking
+Create helper utilities in `lib/posthog.ts`:
+```typescript
+import posthog from 'posthog-js'
+import { UserRole } from './rbac'
+
+export const trackRoleEvent = (
+  eventName: string,
+  role: UserRole,
+  properties?: Record<string, any>
+) => {
+  posthog.capture(eventName, {
+    role,
+    ...properties,
+  })
+}
+
+// Specific event helpers
+export const trackAdminEvent = {
+  projectCreated: (projectId: string) =>
+    trackRoleEvent('project_created', UserRole.ADMIN, { projectId }),
+  teamCreated: (teamId: string) =>
+    trackRoleEvent('team_created', UserRole.ADMIN, { teamId }),
+  roleAssigned: (userId: string, role: UserRole) =>
+    trackRoleEvent('role_assigned', UserRole.ADMIN, { targetUser: userId, assignedRole: role }),
+  wizardCompleted: (duration: number, steps: number) =>
+    trackRoleEvent('wizard_completed', UserRole.ADMIN, { duration, steps }),
+}
+
+export const trackMemberEvent = {
+  taskCompleted: (taskId: string, duration?: number) =>
+    trackRoleEvent('task_completed', UserRole.MEMBER, { taskId, duration }),
+  commentAdded: (taskId: string, length: number) =>
+    trackRoleEvent('comment_added', UserRole.MEMBER, { taskId, commentLength: length }),
+  fileUploaded: (taskId: string, fileSize: number, fileType: string) =>
+    trackRoleEvent('file_uploaded', UserRole.MEMBER, { taskId, fileSize, fileType }),
+}
+
+export const trackViewerEvent = {
+  reportViewed: (reportId: string) =>
+    trackRoleEvent('report_viewed', UserRole.VIEWER, { reportId }),
+  analyticsAccessed: () =>
+    trackRoleEvent('analytics_accessed', UserRole.VIEWER),
+  exportRequested: (dataType: string) =>
+    trackRoleEvent('export_requested', UserRole.VIEWER, { dataType }),
+}
+
+// Common events for all roles
+export const trackCommonEvent = {
+  login: (role: UserRole) =>
+    trackRoleEvent('login', role),
+  dashboardSwitched: (fromRole: UserRole, toRole: UserRole) =>
+    posthog.capture('dashboard_switched', { fromRole, toRole }),
+  searchPerformed: (query: string, role: UserRole, resultsCount: number) =>
+    trackRoleEvent('search_performed', role, { query, resultsCount }),
+  notificationClicked: (notificationType: string, role: UserRole) =>
+    trackRoleEvent('notification_clicked', role, { notificationType }),
+}
+```
+
+#### User Identification
+In your auth hook/store, identify users after login:
+```typescript
+// After successful login
+import posthog from 'posthog-js'
+import { useAuthStore } from '@/store/auth-store'
+import { useRoleStore } from '@/store/role-store'
+
+// In your login handler
+const handleLogin = async (user) => {
+  // ... login logic
+  
+  // Identify user in PostHog
+  posthog.identify(user.id, {
+    email: user.email,
+    name: user.name,
+    role: currentRole,
+    signup_date: user.created_at,
+  })
+
+  // Set organization as a group
+  posthog.group('organization', user.organizationId, {
+    name: organization.name,
+    tier: organization.tier,
+    member_count: organization.memberCount,
+    created_at: organization.created_at,
+  })
+}
+```
+
+#### PostHog Provider Component
+Create `components/providers/posthog-provider.tsx`:
+```typescript
+'use client'
+import { useEffect } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import posthog from 'posthog-js'
+import { useAuthStore } from '@/store/auth-store'
+import { useRoleStore } from '@/store/role-store'
+
+export function PostHogProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const user = useAuthStore((state) => state.user)
+  const currentRole = useRoleStore((state) => state.currentRole)
+
+  // Track pageviews with role context
+  useEffect(() => {
+    if (pathname && user) {
+      posthog.capture('$pageview', {
+        role: currentRole,
+        path: pathname,
+      })
+    }
+  }, [pathname, searchParams, currentRole, user])
+
+  // Identify user on mount
+  useEffect(() => {
+    if (user) {
+      posthog.identify(user.id, {
+        email: user.email,
+        name: user.name,
+        role: currentRole,
+      })
+    }
+  }, [user, currentRole])
+
+  return <>{children}</>
+}
+```
+
+Add to your root layout:
+```typescript
+// app/layout.tsx
+import { PostHogProvider } from '@/components/providers/posthog-provider'
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <PostHogProvider>
+          {children}
+        </PostHogProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+#### Custom Hook
+Create `hooks/use-posthog.ts`:
+```typescript
+import { useCallback } from 'react'
+import posthog from 'posthog-js'
+import { useRoleStore } from '@/store/role-store'
+
+export function usePostHog() {
+  const currentRole = useRoleStore((state) => state.currentRole)
+
+  const trackEvent = useCallback(
+    (eventName: string, properties?: Record<string, any>) => {
+      posthog.capture(eventName, {
+        role: currentRole,
+        ...properties,
+      })
+    },
+    [currentRole]
+  )
+
+  return { trackEvent, posthog }
+}
+```
+
+#### Usage in Components
+```typescript
+'use client'
+import { usePostHog } from '@/hooks/use-posthog'
+import { trackAdminEvent } from '@/lib/posthog'
+
+export function ProjectCard({ project }) {
+  const { trackEvent } = usePostHog()
+
+  const handleEdit = () => {
+    trackEvent('project_edit_clicked', { projectId: project.id })
+    // ... edit logic
+  }
+
+  const handleComplete = () => {
+    // Using helper function
+    trackAdminEvent.projectCreated(project.id)
+    // ... completion logic
+  }
+
+  return (
+    <div>
+      <button onClick={handleEdit}>Edit Project</button>
+      <button onClick={handleComplete}>Complete</button>
+    </div>
+  )
+}
+```
+
+#### Wizard Step Tracking
+```typescript
+// In your wizard component
+import { trackAdminEvent } from '@/lib/posthog'
+
+const handleStepComplete = (stepName: string, stepDuration: number) => {
+  posthog.capture('wizard_step_completed', {
+    role: 'admin',
+    step_name: stepName,
+    step_duration: stepDuration,
+    step_number: currentStep,
+  })
+}
+
+const handleWizardComplete = () => {
+  trackAdminEvent.wizardCompleted(totalDuration, totalSteps)
+}
+```
+
+### Key PostHog Events to Track
+
+**Admin Events:**
+- `project_created` - When admin creates project
+- `wizard_completed` - Wizard flow completion
+- `wizard_step_completed` - Each wizard step
+- `team_created` - Team management
+- `role_assigned` - Role assignment
+- `user_invited` - User invitation sent
+- `task_assigned` - Task assignment
+
+**Member Events:**
+- `task_completed` - Task marked complete
+- `task_updated` - Task details edited
+- `comment_added` - Comment posted
+- `file_uploaded` - File attached to task
+- `mention_sent` - @mention used
+
+**Viewer Events:**
+- `dashboard_viewed` - Dashboard access
+- `report_viewed` - Report opened
+- `analytics_accessed` - Analytics tab viewed
+- `export_requested` - Export request made
+
+**Common Events (All Roles):**
+- `login` - User authentication
+- `dashboard_switched` - Role/dashboard change
+- `search_performed` - Search query
+- `notification_clicked` - Notification interaction
+
+### PostHog Custom Dashboards to Create
+
+1. **Role Distribution Dashboard**
+   - Active users by role (pie chart)
+   - Role switching patterns (sankey diagram)
+   - Time spent per role (bar chart)
+
+2. **Wizard Completion Funnel**
+   - Step-by-step completion rates
+   - Drop-off points identification
+   - Average time per step
+   - Completion rates by organization tier
+
+3. **Feature Adoption Dashboard**
+   - Feature usage by role
+   - Adoption rates over time
+   - Most/least used features per role
+
+4. **Project Health Dashboard**
+   - Project creation rate
+   - Task completion rate
+   - Team collaboration metrics (comments, file uploads)
+   - Average project duration
+
+5. **Performance Metrics**
+   - Dashboard load times by role
+   - API response times
+   - Error rates by endpoint
+   - Real-time active users
+
+### PostHog Best Practices for This Project
+
+1. **Always include role context** - Every event should have the user's current role
+2. **Group by organization** - Use PostHog groups for organization-level analytics
+3. **Track wizard steps** - Each wizard step should fire an event for funnel analysis
+4. **Session replay (post-MVP)** - Enable for debugging role-switching issues
+5. **Feature flags (post-MVP)** - Use for testing role-specific features
+6. **Custom dashboards** - Create separate dashboards for Admin/Member/Viewer metrics
+7. **Funnel analysis** - Track wizard completion, onboarding completion per role
+8. **Never track sensitive data** - No passwords, API keys, or personal data in events
 
 ### Zustand State Management
 All state is managed with Zustand stores - no React Context needed:
@@ -774,14 +1145,18 @@ await resend.emails.send({
 4. **Ignoring role context**: Remember users can have different roles in different projects
 5. **Incomplete testing**: Must test each feature with all three roles
 6. **Missing role indicators**: Always show users which role they're currently in
+7. **Forgetting PostHog tracking**: Add event tracking as you build, not as an afterthought
+8. **Not testing PostHog events**: Verify events fire correctly in development before deploying
 
 ### Getting Help
-- **PRD Reference**: Updated PRD v2.0 with role-based architecture
+- **PRD Reference**: Updated PRD v2.1 with PostHog integration and role-based architecture
 - **Role Architecture**: Section 7.2 in PRD
 - **Permissions Matrix**: Section 4.8 in PRD
+- **PostHog Configuration**: Section 7.6 in PRD
 - **Supabase RLS**: https://supabase.com/docs/guides/auth/row-level-security
+- **PostHog Docs**: https://posthog.com/docs
 - **Role-Based Testing**: Playwright examples in e2e/role-*.spec.ts files
 
 ---
 
-**Task List Complete**: 22 parent tasks with 250+ actionable sub-tasks ready for implementation with full role-based dashboard architecture. Estimated timeline: 14-18 weeks for MVP.
+**Task List Complete**: 22 parent tasks with 260+ actionable sub-tasks ready for implementation with full role-based dashboard architecture and PostHog analytics integration. Estimated timeline: 14-18 weeks for MVP.

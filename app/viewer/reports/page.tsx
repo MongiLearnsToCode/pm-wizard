@@ -1,7 +1,15 @@
+'use client';
+
+import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ExportRequest } from '@/components/analytics/export-request';
+import { trackEvent } from '@/lib/posthog';
 
 export default function ReportsPage() {
+  useEffect(() => {
+    trackEvent('report_viewed', { role: 'viewer', page: 'reports' });
+  }, []);
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">

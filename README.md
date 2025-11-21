@@ -21,7 +21,7 @@ PM Wizard streamlines project setup through conversational UI and provides three
 - **File Storage**: Cloudflare R2 (S3-compatible object storage)
 - **AI Integration**: OpenAI API (Admin-only features)
 - **Email**: Resend with React Email templates
-- **Analytics**: Google Analytics 4
+- **Analytics**: PostHog (Product Analytics with role-based event tracking)
 - **Testing**: Jest, React Testing Library, Playwright
 
 ## Getting Started
@@ -33,6 +33,7 @@ PM Wizard streamlines project setup through conversational UI and provides three
 - Cloudflare account (for R2 storage)
 - OpenAI API key
 - Resend account
+- PostHog account
 
 ### Installation
 

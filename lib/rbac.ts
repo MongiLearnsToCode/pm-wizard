@@ -7,7 +7,7 @@ export async function getUserRole(
 ): Promise<UserRole | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc('get_user_project_role', {
+  const { data, error } = await (supabase as any).rpc('get_user_project_role', {
     p_user_id: userId,
     p_project_id: projectId,
   });
@@ -23,7 +23,7 @@ export async function checkPermission(
 ): Promise<boolean> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc('check_user_project_role', {
+  const { data, error } = await (supabase as any).rpc('check_user_project_role', {
     p_user_id: userId,
     p_project_id: projectId,
     p_required_role: requiredRole,
@@ -56,7 +56,7 @@ export async function isOrgAdmin(
 ): Promise<boolean> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc('is_org_admin', {
+  const { data, error } = await (supabase as any).rpc('is_org_admin', {
     p_user_id: userId,
     p_org_id: orgId,
   });
@@ -68,7 +68,7 @@ export async function isOrgAdmin(
 export async function getUserProjects(userId: string) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc('get_user_projects', {
+  const { data, error } = await (supabase as any).rpc('get_user_projects', {
     p_user_id: userId,
   });
 

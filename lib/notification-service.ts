@@ -16,7 +16,7 @@ export async function createNotification(
     title,
     content,
     link,
-  });
+  } as any);
 }
 
 // Role-specific notification triggers

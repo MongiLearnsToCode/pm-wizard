@@ -26,7 +26,7 @@ export function useRole(projectId?: string) {
       const { data } = await supabase.rpc('get_user_project_role', {
         p_user_id: user.id,
         p_project_id: projectId,
-      });
+      } as any);
 
       setRole(data as UserRole | null);
       setLoading(false);

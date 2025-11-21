@@ -14,7 +14,17 @@ export default function ProjectDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
+  const { id: slug } = use(params);
+  
+  // Extract UUID from slug (format: project-name-uuid)
+  const getIdFromSlug = (slug: string) => {
+    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const match = slug.match(uuidRegex);
+    return match ? match[0] : slug;
+  };
+
+  const id = getIdFromSlug(slug);
+  
   const [project, setProject] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -23,7 +33,7 @@ export default function ProjectDetailPage({
   useEffect(() => {
     fetchProject();
     fetchTasks();
-  }, []);
+  }, [id]);
 
   async function fetchProject() {
     const { data } = await supabase

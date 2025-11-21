@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CheckSquare, FolderKanban, User } from 'lucide-react';
+import { CheckSquare, FolderKanban, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DashboardSwitcher } from '@/components/role/dashboard-switcher';
 import { UserProfile } from '@/components/navigation/user-profile';
@@ -10,7 +10,7 @@ import { UserProfile } from '@/components/navigation/user-profile';
 const navItems = [
   { href: '/member/dashboard', label: 'My Tasks', icon: CheckSquare },
   { href: '/member/projects', label: 'Projects', icon: FolderKanban },
-  { href: '/member/profile', label: 'Profile', icon: User },
+  { href: '/member/analytics', label: 'My Analytics', icon: BarChart3 },
 ];
 
 export function MemberNav() {

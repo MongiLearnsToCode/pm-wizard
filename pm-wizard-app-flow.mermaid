@@ -1,0 +1,185 @@
+graph TD
+    Start([User Visits App]) --> CheckAuth{Authenticated?}
+    
+    %% Authentication Flow
+    CheckAuth -->|No| Landing[Landing Page]
+    Landing --> LoginChoice{Login or Register?}
+    LoginChoice -->|Login| Login[Login Page<br/>Email/Password or OAuth]
+    LoginChoice -->|Register| Register[Unified Registration<br/>No Role Selection]
+    
+    Login --> AuthSuccess[Authentication Success]
+    Register --> AuthSuccess
+    
+    %% Role Detection & Dashboard Routing
+    AuthSuccess --> DetectRole{Detect User's<br/>Primary Role}
+    CheckAuth -->|Yes| DetectRole
+    
+    DetectRole -->|Admin| AdminDash[Admin Dashboard]
+    DetectRole -->|Member| MemberDash[Member Dashboard]
+    DetectRole -->|Viewer| ViewerDash[Viewer Dashboard]
+    
+    %% Admin Dashboard Flow
+    AdminDash --> AdminActions{Admin Actions}
+    AdminActions -->|Create Project| WizardStart[Project Creation Wizard]
+    AdminActions -->|Manage Teams| TeamMgmt[Team Management]
+    AdminActions -->|View All Tasks| AdminTasks[All Tasks View]
+    AdminActions -->|Settings| OrgSettings[Organization Settings]
+    AdminActions -->|Analytics| AdminAnalytics[Full Analytics Dashboard]
+    AdminActions -->|Switch Role| RoleSwitch[Dashboard Switcher]
+    
+    %% Project Creation Wizard Flow
+    WizardStart --> WizStep1[Step 1: Project Name]
+    WizStep1 --> WizStep2[Step 2: Description/Goals]
+    WizStep2 --> WizStep3[Step 3: Select Template or<br/>Start from Scratch]
+    WizStep3 --> WizStep4[Step 4: Define Milestones]
+    WizStep4 --> WizStep5[Step 5: Assign Team with Roles]
+    WizStep5 --> WizStep6[Step 6: Set Deadlines]
+    WizStep6 --> WizReview[Review & Generate Tasks]
+    WizReview --> SaveDraft{Save as Draft<br/>or Complete?}
+    SaveDraft -->|Draft| DraftSaved[Draft Saved<br/>Can Resume Later]
+    SaveDraft -->|Complete| ProjectCreated[Project Created]
+    ProjectCreated --> TaskWizard[Task Assignment Wizard]
+    TaskWizard --> AssignTasks[Assign Tasks to Members]
+    AssignTasks --> NotifyMembers[Notify Assigned Members]
+    NotifyMembers --> AdminDash
+    
+    %% Team Management Flow
+    TeamMgmt --> TeamActions{Team Actions}
+    TeamActions -->|Create Team| CreateTeam[Create New Team<br/>Assign Roles]
+    TeamActions -->|Edit Team| EditTeam[Add/Remove Members<br/>Change Roles]
+    TeamActions -->|Delete Team| DeleteTeam[Delete Team<br/>Reassign Projects]
+    CreateTeam --> AdminDash
+    EditTeam --> AdminDash
+    DeleteTeam --> AdminDash
+    
+    %% Organization Settings Flow
+    OrgSettings --> SettingsTabs{Settings Tabs}
+    SettingsTabs -->|General| GeneralSettings[Org Name, Description]
+    SettingsTabs -->|Members| MemberMgmt[View Members<br/>Assign/Change Roles<br/>Invite Users]
+    SettingsTabs -->|Teams| TeamSettings[Manage Teams]
+    SettingsTabs -->|Billing| BillingPage[View Usage<br/>Upgrade Tier<br/>Quotas]
+    MemberMgmt --> InviteUser[Send Email Invitation<br/>with Role]
+    InviteUser --> AdminDash
+    GeneralSettings --> AdminDash
+    TeamSettings --> AdminDash
+    BillingPage --> AdminDash
+    
+    %% Member Dashboard Flow
+    MemberDash --> MemberActions{Member Actions}
+    MemberActions -->|View My Tasks| MyTasks[My Tasks View<br/>Filtered to Current User]
+    MemberActions -->|Edit Task| EditTask[Update Description<br/>Change Status/Priority]
+    MemberActions -->|Complete Task| CompleteTask[Mark Task Complete]
+    MemberActions -->|Add Comment| AddComment[Comment on Own Task]
+    MemberActions -->|Upload File| UploadFile[Attach File to Task]
+    MemberActions -->|View Projects| MemberProjects[Limited Project View<br/>Context Only]
+    MemberActions -->|Personal Analytics| MemberAnalytics[Personal Stats<br/>Completion Rate]
+    
+    EditTask --> TaskUpdated[Task Updated<br/>Notify Admin]
+    CompleteTask --> TaskCompleted[Task Completed<br/>Notify Admin]
+    AddComment --> CommentAdded[Comment Added<br/>Notify @mentions]
+    UploadFile --> FileUploaded[File Uploaded to R2]
+    TaskUpdated --> MemberDash
+    TaskCompleted --> MemberDash
+    CommentAdded --> MemberDash
+    FileUploaded --> MemberDash
+    MyTasks --> MemberDash
+    MemberProjects --> MemberDash
+    MemberAnalytics --> MemberDash
+    
+    %% Viewer Dashboard Flow
+    ViewerDash --> ViewerActions{Viewer Actions<br/>READ-ONLY}
+    ViewerActions -->|View Projects| ViewProjects[Project Overview Cards<br/>No Edit Controls]
+    ViewerActions -->|View Analytics| ViewerAnalytics[High-Level Metrics<br/>Team Performance]
+    ViewerActions -->|View Reports| ViewReports[Pre-Generated Reports<br/>Milestone Progress]
+    ViewerActions -->|Activity Timeline| ViewActivity[Project Activity Feed]
+    ViewerActions -->|Request Export| ExportRequest[Request CSV Export<br/>Needs Admin Approval]
+    
+    ViewProjects --> ViewerDash
+    ViewerAnalytics --> ViewerDash
+    ViewReports --> ViewerDash
+    ViewActivity --> ViewerDash
+    ExportRequest --> NotifyAdmin[Notify Admin for Approval]
+    NotifyAdmin --> ViewerDash
+    
+    %% Role Switching Flow
+    RoleSwitch --> HasMultipleRoles{Has Multiple Roles<br/>Across Projects?}
+    HasMultipleRoles -->|Yes| SelectRole[Select Role/Project<br/>Context]
+    HasMultipleRoles -->|No| StayInRole[Remain in Current Role]
+    SelectRole --> RouteRole{Route to Dashboard}
+    RouteRole -->|Admin| AdminDash
+    RouteRole -->|Member| MemberDash
+    RouteRole -->|Viewer| ViewerDash
+    StayInRole --> AdminDash
+    
+    %% Common Features Across Roles
+    AdminDash --> CommonFeatures[Common Features]
+    MemberDash --> CommonFeatures
+    ViewerDash --> CommonFeatures
+    
+    CommonFeatures --> Notifications[In-App Notifications<br/>Role-Filtered]
+    CommonFeatures --> Search[Global Search<br/>Role-Scoped Results]
+    CommonFeatures --> Profile[User Profile<br/>Edit Settings]
+    CommonFeatures --> Help[Help & Documentation<br/>Role-Specific]
+    
+    Notifications --> BackToDash[Back to Dashboard]
+    Search --> BackToDash
+    Profile --> BackToDash
+    Help --> BackToDash
+    
+    BackToDash --> DetectRole
+    
+    %% AI Features (Admin Only)
+    AdminActions -->|Use AI| AIFeatures[AI Features<br/>ADMIN ONLY]
+    AIFeatures --> AIActions{AI Actions}
+    AIActions -->|Template Suggestions| AITemplate[Suggest Project Template<br/>Based on Description]
+    AIActions -->|Task Breakdown| AITasks[Generate Task List<br/>from Project Goal]
+    AIActions -->|Workload Analysis| AIWorkload[Analyze Team Capacity<br/>Suggest Reallocation]
+    AITemplate --> AdminDash
+    AITasks --> TaskWizard
+    AIWorkload --> AdminDash
+    
+    %% Collaboration Features
+    MemberActions -->|Collaborate| Collab[Collaboration]
+    AdminActions -->|Collaborate| Collab
+    Collab --> CollabActions{Collaboration}
+    CollabActions -->|@Mention| Mention[Mention Team Member<br/>In Comment]
+    CollabActions -->|React| React[Add Emoji Reaction]
+    CollabActions -->|Project Chat| Chat[Project-Level Discussion]
+    Mention --> NotifyMentioned[Notify Mentioned User]
+    React --> CollabDone[Collaboration Complete]
+    Chat --> CollabDone
+    NotifyMentioned --> CollabDone
+    CollabDone --> BackToDash
+    
+    %% Real-Time Updates
+    AdminDash -.Real-Time.-> Realtime[Supabase Realtime<br/>Live Updates]
+    MemberDash -.Real-Time.-> Realtime
+    ViewerDash -.Real-Time.-> Realtime
+    Realtime -.Updates.-> AdminDash
+    Realtime -.Updates.-> MemberDash
+    Realtime -.Updates.-> ViewerDash
+    
+    %% PostHog Analytics Tracking
+    AdminDash -.Track.-> PostHog[PostHog Analytics]
+    MemberDash -.Track.-> PostHog
+    ViewerDash -.Track.-> PostHog
+    WizardStart -.Track Funnel.-> PostHog
+    ProjectCreated -.project_created.-> PostHog
+    TaskCompleted -.task_completed.-> PostHog
+    ViewReports -.report_viewed.-> PostHog
+    PostHog -.Role Context.-> EventProps[Every Event Includes:<br/>role, organizationId, timestamp]
+    
+    %% Styling
+    classDef adminClass fill:#3b82f6,stroke:#1e40af,stroke-width:3px,color:#fff
+    classDef memberClass fill:#10b981,stroke:#047857,stroke-width:3px,color:#fff
+    classDef viewerClass fill:#6b7280,stroke:#374151,stroke-width:3px,color:#fff
+    classDef wizardClass fill:#8b5cf6,stroke:#6d28d9,stroke-width:2px,color:#fff
+    classDef analyticsClass fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff
+    classDef realtimeClass fill:#ec4899,stroke:#be185d,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+    
+    class AdminDash,AdminActions,AdminTasks,AdminAnalytics,TeamMgmt,OrgSettings,AIFeatures adminClass
+    class MemberDash,MemberActions,MyTasks,EditTask,CompleteTask memberClass
+    class ViewerDash,ViewerActions,ViewProjects,ViewerAnalytics,ViewReports viewerClass
+    class WizardStart,WizStep1,WizStep2,WizStep3,WizStep4,WizStep5,WizStep6,TaskWizard wizardClass
+    class PostHog,EventProps analyticsClass
+    class Realtime realtimeClass

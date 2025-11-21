@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { identifyUser, trackEvent } from '@/lib/posthog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +21,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -28,13 +29,26 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
       setLoading(false);
-    } else {
+      trackEvent('login_failed', { error: error.message });
+    } else if (data.user) {
+      // Get user's role from database
+      const { data: roleData } = await supabase
+        .from('user_project_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .limit(1)
+        .single();
+
+      const role = (roleData as any)?.role || 'member';
+      identifyUser(data.user.id, data.user.email!, role);
+      trackEvent('user_logged_in', { role, method: 'email' });
       router.push('/admin/dashboard');
       router.refresh();
     }
   };
 
   const handleGoogleLogin = async () => {
+    trackEvent('login_attempt', { method: 'google' });
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

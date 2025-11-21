@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, FileText, Eye } from 'lucide-react';
+import { BarChart3, FileText, Eye, FolderKanban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DashboardSwitcher } from '@/components/role/dashboard-switcher';
 import { UserProfile } from '@/components/navigation/user-profile';
 
 const navItems = [
   { href: '/viewer/dashboard', label: 'Dashboard', icon: Eye },
+  { href: '/viewer/projects', label: 'Projects', icon: FolderKanban },
   { href: '/viewer/reports', label: 'Reports', icon: FileText },
   { href: '/viewer/analytics', label: 'Analytics', icon: BarChart3 },
 ];

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { trackEvent } from '@/lib/posthog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,6 +29,7 @@ export function ProjectWizard() {
 
   useEffect(() => {
     loadDraft();
+    trackEvent('wizard_started', { role: 'admin' });
   }, []);
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export function ProjectWizard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          organization_id: orgs.id,
+          organization_id: (orgs as any).id,
           draft_data: data,
           step,
         }),
@@ -83,24 +85,30 @@ export function ProjectWizard() {
     const { data: project } = await supabase
       .from('projects')
       .insert({
-        organization_id: orgs.id,
+        organization_id: (orgs as any).id,
         name: data.name,
         description: data.description,
         deadline: data.deadline || null,
         created_by: user.id,
         status: 'active',
-      })
+      } as any)
       .select()
       .single();
 
     if (project) {
+      trackEvent('project_created', {
+        role: 'admin',
+        template: data.template,
+        team_size: data.roleAssignments.length,
+      });
+
       // Assign roles
       for (const assignment of data.roleAssignments as any[]) {
         await supabase.from('user_project_roles').insert({
           user_id: assignment.userId,
-          project_id: project.id,
+          project_id: (project as any).id,
           role: assignment.role,
-        });
+        } as any);
       }
 
       // Create tasks from template
@@ -108,10 +116,10 @@ export function ProjectWizard() {
       if (template?.tasks.length) {
         for (const taskTitle of template.tasks) {
           await supabase.from('tasks').insert({
-            project_id: project.id,
+            project_id: (project as any).id,
             title: taskTitle,
             created_by: user.id,
-          });
+          } as any);
         }
       }
 

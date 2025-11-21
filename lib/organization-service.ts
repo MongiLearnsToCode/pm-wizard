@@ -14,7 +14,7 @@ export async function addMemberToOrg(
       organization_id: orgId,
       user_id: userId,
       role,
-    })
+    } as any)
     .select()
     .single();
 
@@ -40,7 +40,7 @@ export async function updateMemberRole(
 ) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const result = await (supabase as any)
     .from('user_organization_roles')
     .update({ role })
     .eq('organization_id', orgId)
@@ -48,7 +48,7 @@ export async function updateMemberRole(
     .select()
     .single();
 
-  return { data, error };
+  return { data: result.data, error: result.error };
 }
 
 export async function getOrgMembers(orgId: string) {
