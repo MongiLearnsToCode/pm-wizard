@@ -35,13 +35,23 @@ export default function LoginPage() {
       const { data: projectRoles } = await supabase
         .from('user_project_roles')
         .select('project_id, role, projects(id, name)')
-        .eq('user_id', data.user.id)
-        .limit(1)
-        .single();
+        .eq('user_id', data.user.id);
 
-      const role = (projectRoles as any)?.role || 'member';
+      // If user has no projects, route to wizard to create first project
+      if (!projectRoles || projectRoles.length === 0) {
+        identifyUser(data.user.id, data.user.email!, 'admin');
+        trackEvent('user_logged_in', { role: 'new_user', method: 'email', has_projects: false });
+        router.push('/admin/wizard');
+        router.refresh();
+        return;
+      }
+
+      // Get first project role
+      const firstProject = projectRoles[0] as any;
+      const role = firstProject.role || 'member';
+      
       identifyUser(data.user.id, data.user.email!, role);
-      trackEvent('user_logged_in', { role, method: 'email' });
+      trackEvent('user_logged_in', { role, method: 'email', has_projects: true });
       
       // Route to appropriate dashboard based on role
       router.push(`/${role}/dashboard`);
