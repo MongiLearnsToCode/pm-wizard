@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CheckSquare, FolderKanban, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DashboardSwitcher } from '@/components/role/dashboard-switcher';
+import { ProjectSwitcher } from '@/components/role/project-switcher';
 import { UserProfile } from '@/components/navigation/user-profile';
+import { useUserProjects } from '@/hooks/use-user-projects';
 
 const navItems = [
   { href: '/member/dashboard', label: 'My Tasks', icon: CheckSquare },
@@ -15,12 +16,13 @@ const navItems = [
 
 export function MemberNav() {
   const pathname = usePathname();
+  useUserProjects();
 
   return (
     <aside className="w-64 border-r bg-muted/40 p-6 flex flex-col">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-xl font-bold">PM Wizard</h1>
-        <DashboardSwitcher />
+      <div className="mb-8">
+        <h1 className="text-xl font-bold mb-4">PM Wizard</h1>
+        <ProjectSwitcher />
       </div>
 
       <nav className="space-y-2 flex-1">

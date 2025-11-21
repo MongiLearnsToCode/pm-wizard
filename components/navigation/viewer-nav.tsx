@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BarChart3, FileText, Eye, FolderKanban } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DashboardSwitcher } from '@/components/role/dashboard-switcher';
+import { ProjectSwitcher } from '@/components/role/project-switcher';
 import { UserProfile } from '@/components/navigation/user-profile';
+import { useUserProjects } from '@/hooks/use-user-projects';
 
 const navItems = [
   { href: '/viewer/dashboard', label: 'Dashboard', icon: Eye },
@@ -16,12 +17,13 @@ const navItems = [
 
 export function ViewerNav() {
   const pathname = usePathname();
+  useUserProjects();
 
   return (
     <aside className="w-64 border-r bg-muted/40 p-6 flex flex-col">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-xl font-bold">PM Wizard</h1>
-        <DashboardSwitcher />
+      <div className="mb-8">
+        <h1 className="text-xl font-bold mb-4">PM Wizard</h1>
+        <ProjectSwitcher />
       </div>
 
       <div className="mb-4 rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">

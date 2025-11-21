@@ -31,18 +31,20 @@ export default function LoginPage() {
       setLoading(false);
       trackEvent('login_failed', { error: error.message });
     } else if (data.user) {
-      // Get user's role from database
-      const { data: roleData } = await supabase
+      // Get user's projects and roles
+      const { data: projectRoles } = await supabase
         .from('user_project_roles')
-        .select('role')
+        .select('project_id, role, projects(id, name)')
         .eq('user_id', data.user.id)
         .limit(1)
         .single();
 
-      const role = (roleData as any)?.role || 'member';
+      const role = (projectRoles as any)?.role || 'member';
       identifyUser(data.user.id, data.user.email!, role);
       trackEvent('user_logged_in', { role, method: 'email' });
-      router.push('/admin/dashboard');
+      
+      // Route to appropriate dashboard based on role
+      router.push(`/${role}/dashboard`);
       router.refresh();
     }
   };
